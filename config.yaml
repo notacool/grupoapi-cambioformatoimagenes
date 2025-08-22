@@ -1,0 +1,51 @@
+# Configuración del Conversor de Archivos TIFF
+# Este archivo permite personalizar el comportamiento de los conversores
+
+# Configuración de formatos de salida
+formats:
+  # Conversor JPG 400 DPI (alta resolución)
+  jpg_400:
+    enabled: true                    # Habilitar conversión a JPG 400 DPI
+    quality: 95                      # Calidad de compresión (1-100)
+    optimize: true                   # Optimizar archivo
+    progressive: false               # JPEG progresivo
+    dpi: 400                        # Resolución en DPI
+  
+  # Conversor JPG 200 DPI (media resolución)
+  jpg_200:
+    enabled: true                    # Habilitar conversión a JPG 200 DPI
+    quality: 90                      # Calidad de compresión (1-100)
+    optimize: true                   # Optimizar archivo
+    progressive: false               # JPEG progresivo
+    dpi: 200                        # Resolución en DPI
+  
+  # Conversor PDF con EasyOCR (alternativa local)
+  pdf_easyocr:
+    enabled: true                    # ✅ HABILITAR EasyOCR
+    resolution: 300                  # Resolución en DPI
+    page_size: "A4"                 # Tamaño de página
+    fit_to_page: true                # Ajustar imagen a la página
+    ocr_language: ["es", "en"]      # Lista de idiomas para OCR
+    ocr_confidence: 0.5             # Confianza mínima para OCR (0.0-1.0)
+    create_searchable_pdf: true      # Crear PDF con texto buscable
+    use_gpu: false                  # Usar GPU si está disponible
+
+# Configuración de procesamiento
+processing:
+  max_workers: 4                     # Número máximo de workers paralelos
+  batch_size: 10                     # Tamaño del lote de procesamiento
+  overwrite_existing: false          # Sobrescribir archivos existentes
+
+# Configuración de salida
+output:
+  create_subdirectories: true        # Crear subdirectorios por formato
+  naming_pattern: "{original_name}_{format}_{dpi}"  # Patrón de nombres con DPI
+
+# Notas:
+# - Los valores se pueden modificar según las necesidades
+# - Para agregar nuevos formatos, crear nuevas secciones siguiendo el patrón
+# - Los conversores se cargan dinámicamente desde el código
+# - Este archivo se puede especificar con --config en la línea de comandos
+# - JPG_400 y JPG_200 crean versiones de alta y media resolución respectivamente
+# - PDF_EasyOCR está habilitado como única opción de OCR
+# - Tesseract y Azure OCR están deshabilitados
