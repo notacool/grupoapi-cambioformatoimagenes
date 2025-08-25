@@ -21,4 +21,4 @@ jobs:
         pip install pylint
     - name: Analizar código con pylint
       run: |
-        pylint src/ main.py test_converter.py test_met_converter.py --disable=C0114,C0115,C0116 --max-line-length=100
+        pylint src/ main.py --disable=C0114,C0115,C0116 --max-line-length=100

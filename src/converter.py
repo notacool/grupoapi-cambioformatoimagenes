@@ -4,6 +4,7 @@ Motor principal de conversión de archivos TIFF
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 from tqdm import tqdm
@@ -190,6 +191,11 @@ class TIFFConverter:
             }
 
             self._print_summary(result)
+            
+            # Generar archivos MET por formato si está habilitado
+            if self.config.get('met_metadata', {}).get('enabled', False):
+                self._generate_format_specific_met(result, output_dir)
+            
             return result
 
         except Exception as e:
@@ -275,6 +281,66 @@ class TIFFConverter:
             self.converters = self._initialize_converters()
             return True
         return False
+
+    def _generate_format_specific_met(self, result: Dict[str, Any], output_dir: Path) -> None:
+        """
+        Genera archivos MET separados, uno por cada tipo de formato
+        
+        Args:
+            result: Resultado de la conversión
+            output_dir: Directorio de salida
+        """
+        try:
+            if not result.get('success') or 'met_metadata' not in self.converters:
+                return
+            
+            # Obtener el conversor MET
+            met_converter = self.converters['met_metadata']
+            
+            # Preparar los resultados para los archivos MET por formato
+            conversion_results = []
+            
+            # Recopilar información de todos los archivos procesados
+            for file_info in result.get('files_info', []):
+                input_file = Path(file_info['input_file'])
+                output_files = []
+                
+                # Agregar información de cada formato generado
+                for format_name in result.get('formats_processed', []):
+                    if format_name in file_info.get('conversions', {}):
+                        conversion = file_info['conversions'][format_name]
+                        if conversion.get('success'):
+                            output_path = Path(conversion['output_path'])
+                            output_files.append({
+                                'format': format_name,
+                                'path': output_path,
+                                'size': output_path.stat().st_size if output_path.exists() else 0
+                            })
+                
+                conversion_results.append({
+                    'input_file': input_file,
+                    'output_files': output_files,
+                    'success': len(output_files) > 0
+                })
+            
+            # Generar archivos MET por formato
+            if hasattr(met_converter, 'create_format_specific_met'):
+                results = met_converter.create_format_specific_met(conversion_results, output_dir)
+                
+                # Mostrar resumen de generación
+                successful_formats = [fmt for fmt, success in results.items() if success]
+                failed_formats = [fmt for fmt, success in results.items() if not success]
+                
+                if successful_formats:
+                    print(f"✅ Archivos MET generados para: {', '.join(successful_formats)}")
+                if failed_formats:
+                    print(f"❌ Errores generando MET para: {', '.join(failed_formats)}")
+                    
+            else:
+                print("⚠️  Conversor MET no soporta archivos por formato")
+                
+        except Exception as e:
+            print(f"❌ Error generando archivos MET por formato: {str(e)}")
 
 
 def main():

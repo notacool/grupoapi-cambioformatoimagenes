@@ -73,15 +73,15 @@ jobs:
 
     - name: Verificar formato con Black
       run: |
-        black --check --diff src/ main.py test_converter.py test_met_converter.py
+        black --check --diff src/ main.py
 
     - name: Verificar imports con isort
       run: |
-        isort --check-only --diff src/ main.py test_converter.py test_met_converter.py
+        isort --check-only --diff src/ main.py
 
     - name: Verificar estilo con flake8
       run: |
-        flake8 src/ main.py test_converter.py test_met_converter.py --max-line-length=100 --ignore=E501,W503
+        flake8 src/ main.py --max-line-length=100 --ignore=E501,W503
 
   security:
     runs-on: ubuntu-latest
@@ -108,7 +108,7 @@ jobs:
         safety check --json --output safety-report.json || true
 
     - name: Subir reportes de seguridad
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |

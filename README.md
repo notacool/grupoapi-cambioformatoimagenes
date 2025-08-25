@@ -24,6 +24,12 @@ Un proyecto Python para convertir archivos TIFF a múltiples formatos de imagen 
 - **Estándar**: Cumple con METS de la Library of Congress
 - **Casos de uso**: Preservación digital, catálogos, gestión documental
 - **Metadatos incluidos**: Información técnica, del archivo, de procesamiento y checksums MD5
+- **Archivos por formato**: Genera archivos XML MET separados, uno por cada tipo de formato convertido, cada uno con su propio tab PREMIS
+
+### **Opciones de Generación Configurables**
+- **Archivos con timestamp**: `generate_all_met: true` → `MET_JPG_400_20250825_151044.xml`
+- **Archivos únicos por formato**: `generate_all_met: false` → `jpg_400.xml`, `pdf_easyocr.xml`
+- **Flexibilidad**: Se puede cambiar entre ambos modos sin modificar el código
 
 ## Características
 
@@ -31,7 +37,8 @@ Un proyecto Python para convertir archivos TIFF a múltiples formatos de imagen 
 - **Conversores configurables**: Sistema modular para agregar nuevos formatos de salida
 - **Múltiples resoluciones JPG**: Control preciso de DPI para diferentes usos
 - **OCR integrado**: PDF con texto buscable usando EasyOCR
-- **Metadatos MET**: Generación de archivos XML con estándares internacionales
+- **Metadatos MET**: Generación de archivos XML con estándares internacionales, uno por cada formato
+- **Nombres de archivos configurables**: Opción para archivos con timestamp o nombres fijos por formato
 - **Interfaz CLI**: Fácil de usar desde la línea de comandos
 - **Configuración flexible**: Archivos YAML para personalizar conversores
 - **Procesamiento paralelo**: Múltiples workers para mayor velocidad
@@ -76,6 +83,15 @@ python main.py --input "imagenes/" --output "convertidas/" --formats jpg_400,pdf
 
 # Convertir solo a metadatos MET
 python main.py --input "imagenes/" --output "convertidas/" --formats met_metadata
+
+# Convertir a todos los formatos y generar archivos MET por formato
+python main.py --input "imagenes/" --output "convertidas/"
+
+# Usar configuración personalizada para archivos MET únicos por formato
+python main.py --input "imagenes/" --output "convertidas/" --config "config_met_single.yaml"
+
+# Usar configuración personalizada para archivos MET con timestamp
+python main.py --input "imagenes/" --output "convertidas/" --config "config_met_timestamp.yaml"
 
 # Usar configuración personalizada
 python main.py --input "imagenes/" --output "convertidas/" --config "mi_config.yaml"
@@ -134,7 +150,14 @@ met_metadata:
   metadata_standard: 'MET'        # Estándar METS
   organization: 'Mi Organización' # Nombre de la organización
   creator: 'Sistema de Conversión' # Sistema creador
+  generate_all_met: true          # true: archivos con timestamp, false: un archivo por formato
+  # Nota: Si está habilitado, automáticamente genera archivos MET separados
+  # uno por cada tipo de formato convertido
 ```
+
+**Opciones de `generate_all_met`:**
+- **`true`**: Genera archivos con timestamp único (ej: `MET_JPG_400_20250825_151044.xml`)
+- **`false`**: Genera un archivo por formato (ej: `jpg_400.xml`, `pdf_easyocr.xml`)
 
 ### Procesamiento
 ```yaml
@@ -143,6 +166,27 @@ processing:
   batch_size: 10       # Tamaño del lote
   overwrite_existing: false
 ```
+
+### **Configuración de Archivos MET**
+
+#### **Archivos con Timestamp (por defecto)**
+```yaml
+met_metadata:
+  enabled: true
+  generate_all_met: true  # Genera: MET_JPG_400_20250825_151044.xml
+```
+
+#### **Archivos Únicos por Formato**
+```yaml
+met_metadata:
+  enabled: true
+  generate_all_met: false  # Genera: jpg_400.xml, pdf_easyocr.xml
+```
+
+#### **Archivos de Configuración Predefinidos**
+- **`config_met_timestamp.yaml`**: Para archivos con timestamp
+- **`config_met_single.yaml`**: Para archivos únicos por formato
+- **`config_met_examples.yaml`**: Ejemplos de ambas configuraciones
 
 ## Estructura del Proyecto
 
@@ -161,9 +205,13 @@ processing:
 │   └── config_manager.py   # Gestión de configuración
 ├── config.yaml             # Configuración por defecto
 ├── config_met_example.yaml # Configuración de ejemplo con MET
+├── config_met_examples.yaml # Configuración de ejemplo con opciones MET
+├── config_met_single.yaml # Configuración para archivos MET únicos por formato
+├── config_met_timestamp.yaml # Configuración para archivos MET con timestamp
 ├── requirements.txt         # Dependencias
 ├── test_converter.py       # Script de pruebas
 ├── test_met_converter.py   # Script de pruebas para MET
+├── test_consolidated_met.py # Script de pruebas para MET por formato
 ├── MET_CONVERTER_README.md # Documentación específica del conversor MET
 └── README.md               # Esta documentación
 ```
@@ -179,6 +227,8 @@ processing:
 - **Configuración**: Habilitar solo `pdf_easyocr` en `config.yaml`
 
 ## 📋 **Configuración Rápida por Caso de Uso**
+
+### **Configuración de Archivos MET**
 
 ### **Caso 1: Solo JPG (sin OCR)**
 ```yaml
@@ -214,6 +264,20 @@ formats:
   met_metadata: { enabled: true }
 ```
 
+### **Caso 5: Archivos MET únicos por formato**
+```yaml
+met_metadata:
+  enabled: true
+  generate_all_met: false  # Genera: jpg_400.xml, pdf_easyocr.xml
+```
+
+### **Caso 6: Archivos MET con timestamp**
+```yaml
+met_metadata:
+  enabled: true
+  generate_all_met: true   # Genera: MET_JPG_400_20250825_151044.xml
+```
+
 ## Agregar Nuevos Conversores
 
 1. Crea una nueva clase que herede de `BaseConverter`
@@ -237,7 +301,13 @@ python test_converter.py
 
 # Pruebas específicas del conversor MET
 python test_met_converter.py
-```
+
+# Pruebas de archivos MET por formato
+python test_consolidated_met.py
+
+# Nota: Este script prueba ambas configuraciones:
+# - Archivos MET con timestamp (generate_all_met: true)
+# - Archivos MET únicos por formato (generate_all_met: false)
 
 ## Solución de Problemas
 
@@ -266,3 +336,7 @@ Este proyecto está bajo licencia MIT.
 8. **OCR offline**: Usar EasyOCR para archivos confidenciales
 9. **Gestión documental**: TIFF → MET XML para sistemas DMS
 10. **Compliance institucional**: TIFF → MET XML para estándares de metadatos
+11. **Auditoría completa**: Generación automática de archivos MET separados por formato
+12. **Gestión de lotes**: Metadatos organizados por tipo de conversión
+13. **Configuración flexible**: Opción para archivos con timestamp o archivos únicos por formato
+14. **Nombres de archivos configurables**: Archivos MET con timestamp único o nombres fijos por formato

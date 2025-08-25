@@ -1,0 +1,39 @@
+# Configuración para generar archivos MET con timestamp
+# Este archivo genera archivos como: MET_JPG_400_20250825_151044.xml
+
+# Configuración de formatos de salida
+formats:
+  jpg_400:
+    enabled: true
+    quality: 95
+    dpi: 400
+  
+  jpg_200:
+    enabled: true
+    quality: 90
+    dpi: 200
+  
+  pdf_easyocr:
+    enabled: true
+    resolution: 300
+    ocr_language: ["es", "en"]
+
+# Configuración de metadatos MET - Archivos con timestamp
+met_metadata:
+  enabled: true
+  include_image_metadata: true
+  include_file_metadata: true
+  include_processing_info: true
+  metadata_standard: 'MET'
+  organization: 'Mi Organización'
+  creator: 'Sistema de Conversión'
+  generate_all_met: true  # Genera archivos como: MET_JPG_400_20250825_151044.xml
+
+# Configuración de procesamiento
+processing:
+  max_workers: 4
+  overwrite_existing: false
+
+# Configuración de salida
+output:
+  create_subdirectories: true
