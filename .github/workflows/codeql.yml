@@ -83,7 +83,7 @@ jobs:
         semgrep ci --config auto --json --output semgrep-report.json || true
 
     - name: Subir reportes de seguridad
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-analysis-reports
         path: |
@@ -116,7 +116,7 @@ jobs:
         pip-audit --format text --output pip-audit-report.txt || true
 
     - name: Subir reportes de auditoría
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dependency-vulnerability-reports
         path: |
