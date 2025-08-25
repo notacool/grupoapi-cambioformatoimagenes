@@ -5,12 +5,11 @@ Gestor de configuración para el conversor de archivos TIFF
 import yaml
 from pathlib import Path
 from typing import Dict, Any, List
-import os
 
 
 class ConfigManager:
     """Gestor de configuración del conversor"""
-    
+
     def __init__(self, config_path: str = None):
         """
         Inicializa el gestor de configuración
