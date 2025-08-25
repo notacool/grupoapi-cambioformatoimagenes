@@ -2,9 +2,9 @@
 Gestor de configuración para el conversor de archivos TIFF
 """
 
-import yaml
 from pathlib import Path
 from typing import Dict, Any, List
+import yaml
 
 
 class ConfigManager:
