@@ -224,7 +224,8 @@ class METMetadataConverter(BaseConverter):
                                 orientation, str(orientation)
                             )
                             img_info.set("orientation", orientation_value)
-                    except Exception:
+                    except Exception as easyocr_error:
+                        print(f"Error obteniendo metadatos de imagen: {str(easyocr_error)}")
                         pass
 
         except Exception as e:
