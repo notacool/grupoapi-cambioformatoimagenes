@@ -26,11 +26,11 @@ class PDFEasyOCRConverter(BaseConverter):
             config: Configuración del conversor
         """
         super().__init__(config)
-        self.ocr_language = config.get('ocr_language', 'es')
-        self.create_searchable_pdf = config.get('create_searchable_pdf', True)
-        self.page_size = config.get('page_size', 'A4')
-        self.fit_to_page = config.get('fit_to_page', True)
-        self.ocr_confidence = config.get('ocr_confidence', 0.5)
+        self.ocr_language = config.get("ocr_language", "es")
+        self.create_searchable_pdf = config.get("create_searchable_pdf", True)
+        self.page_size = config.get("page_size", "A4")
+        self.fit_to_page = config.get("fit_to_page", True)
+        self.ocr_confidence = config.get("ocr_confidence", 0.5)
         self.ocr_reader = None
         self._initialize_easyocr()
 
@@ -63,7 +63,9 @@ class PDFEasyOCRConverter(BaseConverter):
 
             # Crear directorio de salida
             if not self.create_output_directory(output_path):
-                print(f"Error: No se pudo crear el directorio de salida: {output_path.parent}")
+                print(
+                    f"Error: No se pudo crear el directorio de salida: {output_path.parent}"
+                )
                 return False
 
             # Verificar que EasyOCR esté disponible
@@ -96,8 +98,8 @@ class PDFEasyOCRConverter(BaseConverter):
             # Abrir imagen TIFF
             with Image.open(input_path) as img:
                 # Convertir a RGB si es necesario
-                if img.mode not in ['RGB', 'L']:
-                    img = img.convert('RGB')
+                if img.mode not in ["RGB", "L"]:
+                    img = img.convert("RGB")
 
                 # Obtener dimensiones
                 img_width, img_height = img.size
@@ -122,7 +124,7 @@ class PDFEasyOCRConverter(BaseConverter):
 
                 # Convertir imagen a bytes para ReportLab
                 img_bytes = io.BytesIO()
-                img.save(img_bytes, format='JPEG', quality=95)
+                img.save(img_bytes, format="JPEG", quality=95)
                 img_bytes.seek(0)
 
                 # Agregar imagen al PDF
@@ -140,8 +142,9 @@ class PDFEasyOCRConverter(BaseConverter):
             print(f"Error creando PDF: {str(e)}")
             return False
 
-    def _add_text_layer_to_pdf(self, canvas: Canvas, img: Image.Image,
-                               scale: float, x: float, y: float) -> None:
+    def _add_text_layer_to_pdf(
+        self, canvas: Canvas, img: Image.Image, scale: float, x: float, y: float
+    ) -> None:
         """
         Agrega una capa de texto invisible al PDF basada en OCR
 
@@ -166,8 +169,9 @@ class PDFEasyOCRConverter(BaseConverter):
         except Exception as e:
             print(f"Error agregando capa de texto: {str(e)}")
 
-    def _process_easyocr_results(self, results: List[Tuple], scale: float,
-                                offset_x: float, offset_y: float) -> List[Dict]:
+    def _process_easyocr_results(
+        self, results: List[Tuple], scale: float, offset_x: float, offset_y: float
+    ) -> List[Dict]:
         """
         Procesa los resultados de EasyOCR para extraer texto y posiciones
 
@@ -197,14 +201,16 @@ class PDFEasyOCRConverter(BaseConverter):
                 width = (max(x_coords) - min(x_coords)) * scale
                 height = (max(y_coords) - min(y_coords)) * scale
 
-                text_elements.append({
-                    'text': text,
-                    'x': pdf_x,
-                    'y': pdf_y,
-                    'width': width,
-                    'height': height,
-                    'confidence': confidence
-                })
+                text_elements.append(
+                    {
+                        "text": text,
+                        "x": pdf_x,
+                        "y": pdf_y,
+                        "width": width,
+                        "height": height,
+                        "confidence": confidence,
+                    }
+                )
 
         return text_elements
 
@@ -223,9 +229,7 @@ class PDFEasyOCRConverter(BaseConverter):
 
             # Agregar texto en la posición calculada
             canvas.drawString(
-                text_element['x'],
-                text_element['y'],
-                text_element['text']
+                text_element["x"], text_element["y"], text_element["text"]
             )
 
         except Exception as e:
@@ -233,7 +237,7 @@ class PDFEasyOCRConverter(BaseConverter):
 
     def get_file_extension(self) -> str:
         """Retorna la extensión del archivo PDF"""
-        return '.pdf'
+        return ".pdf"
 
     def get_output_filename(self, input_path: Path, output_dir: Path) -> Path:
         """
@@ -263,12 +267,14 @@ class PDFEasyOCRConverter(BaseConverter):
             Diccionario con información del conversor
         """
         base_info = super().get_converter_info()
-        base_info.update({
-            'ocr_language': self.ocr_language,
-            'create_searchable_pdf': self.create_searchable_pdf,
-            'page_size': self.page_size,
-            'fit_to_page': self.fit_to_page,
-            'ocr_confidence': self.ocr_confidence,
-            'format': 'PDF'
-        })
+        base_info.update(
+            {
+                "ocr_language": self.ocr_language,
+                "create_searchable_pdf": self.create_searchable_pdf,
+                "page_size": self.page_size,
+                "fit_to_page": self.fit_to_page,
+                "ocr_confidence": self.ocr_confidence,
+                "format": "PDF",
+            }
+        )
         return base_info

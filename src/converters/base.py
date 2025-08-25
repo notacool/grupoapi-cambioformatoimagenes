@@ -69,7 +69,7 @@ class BaseConverter(ABC):
                 return False
 
             # Verificar extensión TIFF
-            if input_path.suffix.lower() not in ['.tiff', '.tif']:
+            if input_path.suffix.lower() not in [".tiff", ".tif"]:
                 print(f"Error: El archivo no es TIFF: {input_path}")
                 return False
 
@@ -122,7 +122,7 @@ class BaseConverter(ABC):
             Diccionario con información del conversor
         """
         return {
-            'class': self.__class__.__name__,
-            'config': self.config,
-            'extension': self.get_file_extension()
+            "class": self.__class__.__name__,
+            "config": self.config,
+            "extension": self.get_file_extension(),
         }

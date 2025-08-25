@@ -28,13 +28,15 @@ class FileProcessor:
             raise ValueError(f"El directorio de entrada no existe: {self.input_dir}")
 
         if not self.input_dir.is_dir():
-            raise ValueError(f"La ruta de entrada no es un directorio: {self.input_dir}")
+            raise ValueError(
+                f"La ruta de entrada no es un directorio: {self.input_dir}"
+            )
 
         # Buscar archivos TIFF (case-insensitive)
         self.tiff_files = []
 
-        for file_path in self.input_dir.rglob('*'):
-            if file_path.is_file() and file_path.suffix.lower() in ['.tiff', '.tif']:
+        for file_path in self.input_dir.rglob("*"):
+            if file_path.is_file() and file_path.suffix.lower() in [".tiff", ".tif"]:
                 self.tiff_files.append(file_path)
 
         print(f"Encontrados {len(self.tiff_files)} archivos TIFF en: {self.input_dir}")
@@ -56,19 +58,19 @@ class FileProcessor:
         try:
             stat = file_path.stat()
             return {
-                'name': file_path.name,
-                'size': stat.st_size,
-                'size_mb': round(stat.st_size / (1024 * 1024), 2),
-                'modified': stat.st_mtime,
-                'relative_path': file_path.relative_to(self.input_dir),
-                'absolute_path': str(file_path)
+                "name": file_path.name,
+                "size": stat.st_size,
+                "size_mb": round(stat.st_size / (1024 * 1024), 2),
+                "modified": stat.st_mtime,
+                "relative_path": file_path.relative_to(self.input_dir),
+                "absolute_path": str(file_path),
             }
         except Exception as e:
             return {
-                'name': file_path.name,
-                'error': str(e),
-                'relative_path': file_path.relative_to(self.input_dir),
-                'absolute_path': str(file_path)
+                "name": file_path.name,
+                "error": str(e),
+                "relative_path": file_path.relative_to(self.input_dir),
+                "absolute_path": str(file_path),
             }
 
     def get_all_files_info(self) -> List[Dict[str, Any]]:
@@ -91,7 +93,7 @@ class FileProcessor:
 
             if create_subdirectories:
                 # Crear subdirectorios para cada formato
-                formats = ['jpg_400', 'jpg_200', 'pdf_easyocr', 'met_metadata']
+                formats = ["jpg_400", "jpg_200", "pdf_easyocr", "met_metadata"]
                 for format_name in formats:
                     format_dir = self.output_dir / format_name
                     format_dir.mkdir(exist_ok=True)
@@ -103,8 +105,9 @@ class FileProcessor:
             print(f"Error creando estructura de salida: {str(e)}")
             return False
 
-    def get_output_path(self, input_file: Path, format_name: str,
-                       create_subdirectories: bool = True) -> Path:
+    def get_output_path(
+        self, input_file: Path, format_name: str, create_subdirectories: bool = True
+    ) -> Path:
         """
         Genera la ruta de salida para un archivo convertido
 
@@ -134,12 +137,12 @@ class FileProcessor:
     def _get_format_extension(self, format_name: str) -> str:
         """Obtiene la extensión de archivo para un formato específico"""
         extensions = {
-            'jpg_400': '.jpg',
-            'jpg_200': '.jpg',
-            'pdf_easyocr': '.pdf',
-            'met_metadata': '.xml'
+            "jpg_400": ".jpg",
+            "jpg_200": ".jpg",
+            "pdf_easyocr": ".pdf",
+            "met_metadata": ".xml",
         }
-        return extensions.get(format_name, '.unknown')
+        return extensions.get(format_name, ".unknown")
 
     def validate_output_path(self, output_path: Path, overwrite: bool = False) -> bool:
         """
@@ -202,19 +205,19 @@ class FileProcessor:
                 extensions[ext].append(file_path)
 
             return {
-                'total_files': total_files,
-                'total_size_bytes': total_size,
-                'total_size_mb': total_size_mb,
-                'extensions': {ext: len(files) for ext, files in extensions.items()},
-                'input_directory': str(self.input_dir),
-                'output_directory': str(self.output_dir)
+                "total_files": total_files,
+                "total_size_bytes": total_size,
+                "total_size_mb": total_size_mb,
+                "extensions": {ext: len(files) for ext, files in extensions.items()},
+                "input_directory": str(self.input_dir),
+                "output_directory": str(self.output_dir),
             }
 
         except Exception as e:
             return {
-                'error': str(e),
-                'input_directory': str(self.input_dir),
-                'output_directory': str(self.output_dir)
+                "error": str(e),
+                "input_directory": str(self.input_dir),
+                "output_directory": str(self.output_dir),
             }
 
     def cleanup_empty_directories(self) -> bool:
@@ -229,7 +232,7 @@ class FileProcessor:
                 return True
 
             # Buscar directorios vacíos recursivamente
-            for dir_path in sorted(self.output_dir.rglob('*'), reverse=True):
+            for dir_path in sorted(self.output_dir.rglob("*"), reverse=True):
                 if dir_path.is_dir() and not any(dir_path.iterdir()):
                     try:
                         dir_path.rmdir()
