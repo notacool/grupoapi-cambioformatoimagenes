@@ -3,7 +3,7 @@ Procesador de archivos para encontrar y organizar archivos TIFF
 """
 
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 class FileProcessor:

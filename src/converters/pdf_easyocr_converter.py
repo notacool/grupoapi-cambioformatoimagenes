@@ -4,13 +4,13 @@ Conversor de TIFF a PDF con OCR usando EasyOCR
 
 import io
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import easyocr
 import numpy as np
 from PIL import Image
-from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen.canvas import Canvas
 
 from .base import BaseConverter
 

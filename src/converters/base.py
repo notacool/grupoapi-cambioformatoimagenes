@@ -4,7 +4,7 @@ Clase base para todos los conversores de archivos TIFF
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class BaseConverter(ABC):

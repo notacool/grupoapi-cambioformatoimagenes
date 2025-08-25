@@ -4,7 +4,7 @@ Conversor de TIFF a JPG con resolución configurable
 
 import traceback
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 from PIL import Image
 

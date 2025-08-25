@@ -3,7 +3,8 @@ Gestor de configuración para el conversor de archivos TIFF
 """
 
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 import yaml
 
 

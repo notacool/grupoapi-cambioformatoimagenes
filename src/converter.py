@@ -5,17 +5,14 @@ Motor principal de conversión de archivos TIFF
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from tqdm import tqdm
 
 from .config_manager import ConfigManager
+from .converters import (JPGResolutionConverter, METMetadataConverter,
+                         PDFEasyOCRConverter)
 from .file_processor import FileProcessor
-from .converters import (
-    JPGResolutionConverter,
-    PDFEasyOCRConverter,
-    METMetadataConverter,
-)
 
 
 class TIFFConverter:
