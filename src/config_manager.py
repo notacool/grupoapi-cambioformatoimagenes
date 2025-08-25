@@ -14,28 +14,28 @@ class ConfigManager:
     def __init__(self, config_path: str = None):
         """
         Inicializa el gestor de configuración
-        
+
         Args:
             config_path: Ruta al archivo de configuración (opcional)
         """
         self.config_path = config_path or self._get_default_config_path()
         self.config = self._load_config()
-    
+
     def _get_default_config_path(self) -> str:
         """Obtiene la ruta por defecto del archivo de configuración"""
         # Buscar en el directorio actual o en el directorio del script
         current_dir = Path.cwd()
         script_dir = Path(__file__).parent.parent
-        
+
         # Prioridad: directorio actual, luego directorio del script
         for search_dir in [current_dir, script_dir]:
             config_file = search_dir / "config.yaml"
             if config_file.exists():
                 return str(config_file)
-        
+
         # Si no existe, crear uno por defecto en el directorio actual
         return str(current_dir / "config.yaml")
-    
+
     def _load_config(self) -> Dict[str, Any]:
         """Carga la configuración desde el archivo YAML"""
         try:
@@ -47,14 +47,14 @@ class ConfigManager:
                 config = self._get_default_config()
                 self._save_config(config)
                 print(f"Archivo de configuración creado en: {self.config_path}")
-            
+
             return self._validate_config(config)
-            
+
         except Exception as e:
             print(f"Error cargando configuración: {str(e)}")
             print("Usando configuración por defecto")
             return self._get_default_config()
-    
+
     def _get_default_config(self) -> Dict[str, Any]:
         """Retorna la configuración por defecto"""
         return {
@@ -83,7 +83,7 @@ class ConfigManager:
                 'naming_pattern': '{original_name}_{format}'
             }
         }
-    
+
     def _validate_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Valida y corrige la configuración si es necesario"""
         # Asegurar que todas las secciones existan
@@ -93,7 +93,7 @@ class ConfigManager:
             config['processing'] = {}
         if 'output' not in config:
             config['output'] = {}
-        
+
         # Validar formatos
         default_formats = self._get_default_config()['formats']
         for format_name, format_config in default_formats.items():
@@ -104,21 +104,21 @@ class ConfigManager:
                 for key, value in format_config.items():
                     if key not in config['formats'][format_name]:
                         config['formats'][format_name][key] = value
-        
+
         # Validar procesamiento
         default_processing = self._get_default_config()['processing']
         for key, value in default_processing.items():
             if key not in config['processing']:
                 config['processing'][key] = value
-        
+
         # Validar salida
         default_output = self._get_default_config()['output']
         for key, value in default_output.items():
             if key not in config['output']:
                 config['output'][key] = value
-        
+
         return config
-    
+
     def _save_config(self, config: Dict[str, Any]) -> bool:
         """Guarda la configuración en el archivo YAML"""
         try:
@@ -128,36 +128,36 @@ class ConfigManager:
         except Exception as e:
             print(f"Error guardando configuración: {str(e)}")
             return False
-    
+
     def get_format_config(self, format_name: str) -> Dict[str, Any]:
         """
         Obtiene la configuración para un formato específico
-        
+
         Args:
             format_name: Nombre del formato (ej: 'jpg', 'pdf')
-            
+
         Returns:
             Configuración del formato o configuración vacía si no existe
         """
         return self.config.get('formats', {}).get(format_name, {})
-    
+
     def is_format_enabled(self, format_name: str) -> bool:
         """
         Verifica si un formato está habilitado
-        
+
         Args:
             format_name: Nombre del formato
-            
+
         Returns:
             True si el formato está habilitado
         """
         format_config = self.get_format_config(format_name)
         return format_config.get('enabled', False)
-    
+
     def get_enabled_formats(self) -> List[str]:
         """
         Obtiene la lista de formatos habilitados
-        
+
         Returns:
             Lista de nombres de formatos habilitados
         """
@@ -166,22 +166,22 @@ class ConfigManager:
             if format_config.get('enabled', False):
                 enabled_formats.append(format_name)
         return enabled_formats
-    
+
     def get_processing_config(self) -> Dict[str, Any]:
         """Obtiene la configuración de procesamiento"""
         return self.config.get('processing', {})
-    
+
     def get_output_config(self) -> Dict[str, Any]:
         """Obtiene la configuración de salida"""
         return self.config.get('output', {})
-    
+
     def update_config(self, new_config: Dict[str, Any]) -> bool:
         """
         Actualiza la configuración
-        
+
         Args:
             new_config: Nueva configuración
-            
+
         Returns:
             True si se actualizó correctamente
         """
@@ -191,11 +191,11 @@ class ConfigManager:
         except Exception as e:
             print(f"Error actualizando configuración: {str(e)}")
             return False
-    
+
     def reload_config(self) -> bool:
         """
         Recarga la configuración desde el archivo
-        
+
         Returns:
             True si se recargó correctamente
         """
