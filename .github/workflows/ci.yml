@@ -39,19 +39,21 @@ jobs:
     - name: Ejecutar tests
       run: |
         python test_converter.py
+        python test_met_converter.py
 
     - name: Verificar sintaxis
       run: |
         python -m py_compile src/**/*.py
         python -m py_compile main.py
         python -m py_compile test_converter.py
+        python -m py_compile test_met_converter.py
 
     - name: Verificar imports
       run: |
         python -c "from src.converter import TIFFConverter"
         python -c "from src.config_manager import ConfigManager"
         python -c "from src.file_processor import FileProcessor"
-        python -c "from src.converters import JPGResolutionConverter, PDFEasyOCRConverter"
+        python -c "from src.converters import JPGResolutionConverter, PDFEasyOCRConverter, METMetadataConverter"
 
   lint:
     runs-on: ubuntu-latest
@@ -71,15 +73,15 @@ jobs:
 
     - name: Verificar formato con Black
       run: |
-        black --check --diff src/ main.py test_converter.py
+        black --check --diff src/ main.py test_converter.py test_met_converter.py
 
     - name: Verificar imports con isort
       run: |
-        isort --check-only --diff src/ main.py test_converter.py
+        isort --check-only --diff src/ main.py test_converter.py test_met_converter.py
 
     - name: Verificar estilo con flake8
       run: |
-        flake8 src/ main.py test_converter.py --max-line-length=100 --ignore=E501,W503
+        flake8 src/ main.py test_converter.py test_met_converter.py --max-line-length=100 --ignore=E501,W503
 
   security:
     runs-on: ubuntu-latest

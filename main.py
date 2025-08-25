@@ -15,7 +15,7 @@ from src.converter import TIFFConverter
 @click.option('--output', '-o', 'output_dir',
               help='Directorio de salida para las conversiones')
 @click.option('--formats', '-f', 
-              help='Formatos específicos a convertir (ej: jpg,pdf)')
+              help='Formatos específicos a convertir (ej: jpg_400,jpg_200,pdf_easyocr,met_metadata)')
 @click.option('--config', '-c', 'config_path',
               help='Archivo de configuración personalizado')
 @click.option('--workers', '-w', 'max_workers', type=int,
@@ -36,7 +36,8 @@ def main(input_dir, output_dir, formats, config_path, max_workers,
     
     Ejemplos:
         python main.py --input "imagenes/" --output "convertidas/"
-        python main.py --input "imagenes/" --output "convertidas/" --formats jpg,pdf
+        python main.py --input "imagenes/" --output "convertidas/" --formats jpg_400,pdf_easyocr
+        python main.py --input "imagenes/" --output "convertidas/" --formats met_metadata
         python main.py --input "imagenes/" --output "convertidas/" --config "mi_config.yaml"
     """
     

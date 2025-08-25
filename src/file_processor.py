@@ -91,7 +91,7 @@ class FileProcessor:
 
             if create_subdirectories:
                 # Crear subdirectorios para cada formato
-                formats = ['jpg_400', 'jpg_200', 'pdf_easyocr']
+                formats = ['jpg_400', 'jpg_200', 'pdf_easyocr', 'met_metadata']
                 for format_name in formats:
                     format_dir = self.output_dir / format_name
                     format_dir.mkdir(exist_ok=True)
@@ -136,7 +136,8 @@ class FileProcessor:
         extensions = {
             'jpg_400': '.jpg',
             'jpg_200': '.jpg',
-            'pdf_easyocr': '.pdf'
+            'pdf_easyocr': '.pdf',
+            'met_metadata': '.xml'
         }
         return extensions.get(format_name, '.unknown')
 

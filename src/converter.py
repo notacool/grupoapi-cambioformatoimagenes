@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from .config_manager import ConfigManager
 from .file_processor import FileProcessor
-from .converters import JPGResolutionConverter, PDFEasyOCRConverter
+from .converters import JPGResolutionConverter, PDFEasyOCRConverter, METMetadataConverter
 
 
 class TIFFConverter:
@@ -44,6 +44,11 @@ class TIFFConverter:
         if self.config_manager.is_format_enabled('pdf_easyocr'):
             pdf_easyocr_config = self.config_manager.get_format_config('pdf_easyocr')
             converters['pdf_easyocr'] = PDFEasyOCRConverter(pdf_easyocr_config)
+
+        # MET Metadata Converter
+        if self.config_manager.is_format_enabled('met_metadata'):
+            met_metadata_config = self.config_manager.get_format_config('met_metadata')
+            converters['met_metadata'] = METMetadataConverter(met_metadata_config)
 
         print(f"Conversores inicializados: {list(converters.keys())}")
         return converters
@@ -221,6 +226,8 @@ class TIFFConverter:
                 print("🖼️  JPG 200 DPI: Resolución media para web")
             if 'pdf_easyocr' in result['formats_processed']:
                 print("📄 PDF con EasyOCR: Texto buscable y seleccionable")
+            if 'met_metadata' in result['formats_processed']:
+                print("📋 MET Metadata: Archivos XML con metadatos detallados")
         else:
             print(f"❌ Error en la conversión: {result['error']}")
 

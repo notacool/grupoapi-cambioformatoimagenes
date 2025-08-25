@@ -1,0 +1,69 @@
+# Configuración de ejemplo para el Conversor TIFF con soporte MET
+# Este archivo muestra cómo configurar todos los conversores disponibles
+
+formats:
+  # Conversor JPG 400 DPI - Alta resolución para impresión
+  jpg_400:
+    enabled: true
+    quality: 95
+    optimize: true
+    progressive: false
+    dpi: 400
+
+  # Conversor JPG 200 DPI - Resolución media para web
+  jpg_200:
+    enabled: true
+    quality: 90
+    optimize: true
+    progressive: true
+    dpi: 200
+
+  # Conversor PDF con EasyOCR - Texto buscable
+  pdf_easyocr:
+    enabled: true
+    ocr_language: 'es'
+    create_searchable_pdf: true
+    page_size: 'A4'
+    fit_to_page: true
+    ocr_confidence: 0.5
+
+  # Conversor MET Metadata - Archivos XML con metadatos
+  met_metadata:
+    enabled: true
+    include_image_metadata: true
+    include_file_metadata: true
+    include_processing_info: true
+    metadata_standard: 'MET'
+    organization: 'Mi Organización'
+    creator: 'Sistema de Conversión Automatizado'
+
+# Configuración de procesamiento
+processing:
+  max_workers: 4
+  batch_size: 10
+  overwrite_existing: false
+
+# Configuración de salida
+output:
+  create_subdirectories: true
+  naming_pattern: '{original_name}_{format}'
+
+# Configuración específica para metadatos MET
+metadata:
+  # Configuración de metadatos técnicos
+  technical:
+    include_exif: true
+    include_checksum: true
+    checksum_type: 'MD5'
+  
+  # Configuración de metadatos administrativos
+  administrative:
+    include_processing_history: true
+    include_conversion_log: true
+    include_quality_metrics: true
+  
+  # Configuración de metadatos descriptivos
+  descriptive:
+    include_file_properties: true
+    include_image_properties: true
+    include_format_specific_info: true

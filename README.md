@@ -7,6 +7,7 @@ Un proyecto Python para convertir archivos TIFF a múltiples formatos de imagen 
 - **🖼️ JPG 400 DPI**: Alta resolución para impresión profesional
 - **🖼️ JPG 200 DPI**: Resolución media para uso web y digital
 - **📄 PDF con EasyOCR**: PDF con texto buscable usando reconocimiento óptico de caracteres
+- **📋 MET Metadata**: Archivos XML con metadatos detallados siguiendo estándares internacionales
 
 ## 🔍 **OCR con EasyOCR**
 
@@ -16,12 +17,21 @@ Un proyecto Python para convertir archivos TIFF a múltiples formatos de imagen 
 - **Uso**: Ideal para procesamiento local y archivos confidenciales
 - **Instalación**: Automática, los modelos se descargan en la primera ejecución
 
+## 📋 **Conversor MET Metadata**
+
+### **Estándar METS (Metadata Encoding and Transmission Standard)**
+- **Propósito**: Generar metadatos XML estructurados para archivos TIFF
+- **Estándar**: Cumple con METS de la Library of Congress
+- **Casos de uso**: Preservación digital, catálogos, gestión documental
+- **Metadatos incluidos**: Información técnica, del archivo, de procesamiento y checksums MD5
+
 ## Características
 
 - **Procesamiento por lotes**: Convierte todos los archivos TIFF de una carpeta
 - **Conversores configurables**: Sistema modular para agregar nuevos formatos de salida
 - **Múltiples resoluciones JPG**: Control preciso de DPI para diferentes usos
 - **OCR integrado**: PDF con texto buscable usando EasyOCR
+- **Metadatos MET**: Generación de archivos XML con estándares internacionales
 - **Interfaz CLI**: Fácil de usar desde la línea de comandos
 - **Configuración flexible**: Archivos YAML para personalizar conversores
 - **Procesamiento paralelo**: Múltiples workers para mayor velocidad
@@ -52,7 +62,7 @@ python main.py --input "ruta/a/carpeta" --output "ruta/salida"
 ### Opciones disponibles
 - `--input`: Carpeta con archivos TIFF a convertir
 - `--output`: Carpeta de destino para las conversiones
-- `--formats`: Formatos específicos a convertir (ej: jpg_400,jpg_200,pdf_easyocr)
+- `--formats`: Formatos específicos a convertir (ej: jpg_400,jpg_200,pdf_easyocr,met_metadata)
 - `--config`: Archivo de configuración personalizado
 - `--workers`: Número máximo de workers para procesamiento paralelo
 
@@ -63,6 +73,9 @@ python main.py --input "imagenes/" --output "convertidas/"
 
 # Convertir solo a JPG de alta resolución y PDF con OCR
 python main.py --input "imagenes/" --output "convertidas/" --formats jpg_400,pdf_easyocr
+
+# Convertir solo a metadatos MET
+python main.py --input "imagenes/" --output "convertidas/" --formats met_metadata
 
 # Usar configuración personalizada
 python main.py --input "imagenes/" --output "convertidas/" --config "mi_config.yaml"
@@ -111,6 +124,18 @@ pdf_easyocr:
   create_searchable_pdf: true  # PDF con texto buscable
 ```
 
+#### MET Metadata (Metadatos XML)
+```yaml
+met_metadata:
+  enabled: true
+  include_image_metadata: true    # Metadatos técnicos de imagen
+  include_file_metadata: true     # Metadatos del archivo
+  include_processing_info: true   # Información de procesamiento
+  metadata_standard: 'MET'        # Estándar METS
+  organization: 'Mi Organización' # Nombre de la organización
+  creator: 'Sistema de Conversión' # Sistema creador
+```
+
 ### Procesamiento
 ```yaml
 processing:
@@ -130,12 +155,16 @@ processing:
 │   │   ├── __init__.py
 │   │   ├── base.py         # Clase base para conversores
 │   │   ├── jpg_resolution_converter.py  # JPG con resolución configurable
-│   │   └── pdf_easyocr_converter.py     # PDF con EasyOCR
+│   │   ├── pdf_easyocr_converter.py     # PDF con EasyOCR
+│   │   └── met_metadata_converter.py    # Metadatos XML MET
 │   ├── file_processor.py   # Procesamiento de archivos
 │   └── config_manager.py   # Gestión de configuración
 ├── config.yaml             # Configuración por defecto
+├── config_met_example.yaml # Configuración de ejemplo con MET
 ├── requirements.txt         # Dependencias
 ├── test_converter.py       # Script de pruebas
+├── test_met_converter.py   # Script de pruebas para MET
+├── MET_CONVERTER_README.md # Documentación específica del conversor MET
 └── README.md               # Esta documentación
 ```
 
@@ -167,6 +196,24 @@ formats:
   pdf_easyocr: { enabled: true }
 ```
 
+### **Caso 3: Solo Metadatos MET**
+```yaml
+formats:
+  jpg_400: { enabled: false }
+  jpg_200: { enabled: false }
+  pdf_easyocr: { enabled: false }
+  met_metadata: { enabled: true }
+```
+
+### **Caso 4: Todos los formatos (completo)**
+```yaml
+formats:
+  jpg_400: { enabled: true }
+  jpg_200: { enabled: true }
+  pdf_easyocr: { enabled: true }
+  met_metadata: { enabled: true }
+```
+
 ## Agregar Nuevos Conversores
 
 1. Crea una nueva clase que herede de `BaseConverter`
@@ -174,12 +221,22 @@ formats:
 3. Agrega la configuración en `config.yaml`
 4. El sistema automáticamente detectará y usará el nuevo conversor
 
+### **Documentación Adicional**
+
+- **Conversor MET**: Consulta `MET_CONVERTER_README.md` para información detallada sobre el generador de metadatos XML
+- **Ejemplos**: Revisa `examples/add_new_converter.py` para ver cómo implementar nuevos conversores
+- **Guía de desarrollador**: Consulta `DEVELOPER_GUIDE.md` para arquitectura y mejores prácticas
+
 ## Pruebas
 
 Ejecuta el script de pruebas para verificar la funcionalidad:
 
 ```bash
+# Pruebas generales del sistema
 python test_converter.py
+
+# Pruebas específicas del conversor MET
+python test_met_converter.py
 ```
 
 ## Solución de Problemas
@@ -203,5 +260,9 @@ Este proyecto está bajo licencia MIT.
 2. **Preparación para imprenta**: TIFF → JPG 400 DPI para máxima calidad
 3. **Optimización web**: TIFF → JPG 200 DPI para sitios web
 4. **Archivo maestro**: TIFF → PDF con OCR para preservar texto
-5. **Procesamiento por lotes**: Convertir carpetas completas de documentos
-6. **OCR offline**: Usar EasyOCR para archivos confidenciales
+5. **Preservación digital**: TIFF → MET XML para metadatos institucionales
+6. **Catálogos y archivos**: TIFF → MET XML para sistemas bibliotecarios
+7. **Procesamiento por lotes**: Convertir carpetas completas de documentos
+8. **OCR offline**: Usar EasyOCR para archivos confidenciales
+9. **Gestión documental**: TIFF → MET XML para sistemas DMS
+10. **Compliance institucional**: TIFF → MET XML para estándares de metadatos

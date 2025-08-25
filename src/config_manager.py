@@ -58,18 +58,36 @@ class ConfigManager:
         """Retorna la configuración por defecto"""
         return {
             'formats': {
-                'jpg': {
+                'jpg_400': {
                     'enabled': True,
                     'quality': 95,
                     'optimize': True,
-                    'progressive': False
+                    'progressive': False,
+                    'dpi': 400
                 },
-
-                'pdf': {
+                'jpg_200': {
                     'enabled': True,
-                    'resolution': 300,
+                    'quality': 90,
+                    'optimize': True,
+                    'progressive': True,
+                    'dpi': 200
+                },
+                'pdf_easyocr': {
+                    'enabled': True,
+                    'ocr_language': 'es',
+                    'create_searchable_pdf': True,
                     'page_size': 'A4',
-                    'fit_to_page': True
+                    'fit_to_page': True,
+                    'ocr_confidence': 0.5
+                },
+                'met_metadata': {
+                    'enabled': True,
+                    'include_image_metadata': True,
+                    'include_file_metadata': True,
+                    'include_processing_info': True,
+                    'metadata_standard': 'MET',
+                    'organization': 'Conversor TIFF',
+                    'creator': 'Sistema Automatizado'
                 }
             },
             'processing': {
