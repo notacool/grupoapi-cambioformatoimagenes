@@ -64,6 +64,26 @@ class BMPConverter(BaseConverter):
     def get_file_extension(self) -> str:
         """Retorna la extensión .bmp"""
         return '.bmp'
+    
+    def get_output_filename(self, input_path: Path, output_dir: Path) -> Path:
+        """
+        Genera el nombre del archivo de salida
+        
+        Args:
+            input_path: Archivo de entrada
+            output_dir: Directorio de salida
+            
+        Returns:
+            Ruta del archivo de salida
+        """
+        stem = input_path.stem
+        extension = self.get_file_extension()
+        
+        # Crear subdirectorio específico para este formato
+        format_dir = output_dir / "bmp"
+        format_dir.mkdir(parents=True, exist_ok=True)
+        
+        return format_dir / f"{stem}{extension}"
 
 
 # Para usar este conversor, necesitas:
