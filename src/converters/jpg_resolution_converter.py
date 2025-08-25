@@ -3,6 +3,7 @@ Conversor de imágenes TIFF a formato JPG con resolución configurable
 """
 
 from pathlib import Path
+
 from typing import Dict, Any
 from PIL import Image
 from .base import BaseConverter
