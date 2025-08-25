@@ -10,8 +10,11 @@ from typing import Any, Dict, List, Optional
 from tqdm import tqdm
 
 from .config_manager import ConfigManager
-from .converters import (JPGResolutionConverter, METMetadataConverter,
-                         PDFEasyOCRConverter)
+from .converters import (
+    JPGResolutionConverter,
+    METMetadataConverter,
+    PDFEasyOCRConverter,
+)
 from .file_processor import FileProcessor
 
 
