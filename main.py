@@ -4,6 +4,7 @@ Conversor de Archivos TIFF - Punto de entrada principal
 """
 
 import sys
+import traceback
 from pathlib import Path
 
 import click
@@ -99,7 +100,7 @@ def main(
             )
 
         # Ejecutar conversión
-        click.echo(f"\n🚀 Iniciando conversión de archivos TIFF...")
+        click.echo("\n🚀 Iniciando conversión de archivos TIFF...")
         result = converter.convert_directory(
             input_dir=input_dir,
             output_dir=output_dir,
@@ -109,7 +110,7 @@ def main(
 
         # Mostrar resultado
         if result["success"]:
-            click.echo(f"\n✅ Conversión completada exitosamente!")
+            click.echo("\n✅ Conversión completada exitosamente!")
             if verbose:
                 _show_detailed_results(result)
         else:
@@ -122,8 +123,6 @@ def main(
     except Exception as e:
         click.echo(f"\n❌ Error inesperado: {str(e)}")
         if verbose:
-            import traceback
-
             traceback.print_exc()
         sys.exit(1)
 

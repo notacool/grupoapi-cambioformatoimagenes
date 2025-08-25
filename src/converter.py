@@ -100,7 +100,9 @@ class TIFFConverter:
                 available_formats = list(self.converters.keys())
                 formats = [f for f in formats if f in available_formats]
                 if not formats:
-                    error_msg = f"No hay conversores disponibles para los formatos especificados: {formats}"
+                    error_msg = (
+                    f"No hay conversores disponibles para los formatos especificados: {formats}"
+                )
                     return {
                         "success": False,
                         "error": error_msg,
@@ -209,7 +211,7 @@ class TIFFConverter:
             self._print_summary(result)
 
             # Generar archivos MET por formato si está habilitado
-            if self.config.get("met_metadata", {}).get("enabled", False):
+            if self.config_manager.config.get("met_metadata", {}).get("enabled", False):
                 self._generate_format_specific_met(result, output_dir)
 
             return result

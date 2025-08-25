@@ -1,0 +1,36 @@
+[MASTER]
+disable=
+    C0114,  # missing-module-docstring
+    C0115,  # missing-class-docstring
+    C0116,  # missing-function-docstring
+    W0718,  # broad-exception-caught
+    R0912,  # too-many-branches
+    R0913,  # too-many-arguments
+    R0914,  # too-many-locals
+    R0915,  # too-many-statements
+    R0801,  # duplicate-code
+    W0107,  # unnecessary-pass
+    W0212,  # protected-access
+    W1309,  # f-string-without-interpolation
+    C0415,  # import-outside-toplevel
+    E1120,  # no-value-for-parameter
+
+[FORMAT]
+max-line-length=100
+
+[MESSAGES CONTROL]
+disable=
+    C0114,
+    C0115,
+    C0116,
+    W0718,
+    R0912,
+    R0913,
+    R0914,
+    R0915,
+    R0801,
+    W0107,
+    W0212,
+    W1309,
+    C0415,
+    E1120
