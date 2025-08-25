@@ -14,6 +14,7 @@ disable=
     W1309,  # f-string-without-interpolation
     C0415,  # import-outside-toplevel
     E1120,  # no-value-for-parameter
+    R0917,  # too-many-positional-arguments
 
 [FORMAT]
 max-line-length=100
@@ -33,4 +34,5 @@ disable=
     W0212,
     W1309,
     C0415,
-    E1120
+    E1120,
+    R0917

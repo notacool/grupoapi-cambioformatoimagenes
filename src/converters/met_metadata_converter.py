@@ -370,7 +370,9 @@ class METMetadataConverter(BaseConverter):
 
         Args:
             conversion_results: Lista de resultados de conversión con formato:
-                [{'input_file': Path, 'output_files': [{'format': str, 'path': Path, 'size': int}], 'success': bool}]
+                [{'input_file': Path, 'output_files': [
+                    {'format': str, 'path': Path, 'size': int}
+                ], 'success': bool}]
             output_dir: Directorio de salida para los archivos XML MET
 
         Returns:
