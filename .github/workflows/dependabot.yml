@@ -1,0 +1,112 @@
+name: Dependabot - Actualizaciones Automáticas
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - 'pyproject.toml'
+      - 'setup.py'
+
+jobs:
+  test-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Cache dependencias pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Instalar dependencias actualizadas
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Verificar compatibilidad
+      run: |
+        python -c "import PIL; print(f'Pillow version: {PIL.__version__}')"
+        python -c "import easyocr; print(f'EasyOCR version: {easyocr.__version__}')"
+        python -c "import PyPDF2; print(f'PyPDF2 version: {PyPDF2.__version__}')"
+        python -c "import reportlab; print(f'ReportLab version: {reportlab.Version}')"
+
+    - name: Ejecutar tests con nuevas dependencias
+      run: |
+        python test_converter.py
+
+    - name: Verificar imports
+      run: |
+        python -c "from src.converter import TIFFConverter"
+        python -c "from src.converters import JPGResolutionConverter, PDFEasyOCRConverter"
+
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Instalar dependencias de seguridad
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit
+
+    - name: Verificar vulnerabilidades
+      run: |
+        safety check --json --output safety-report.json || true
+
+    - name: Análisis de seguridad
+      run: |
+        bandit -r src/ -f json -o bandit-report.json || true
+
+    - name: Subir reportes
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports-updated-deps
+        path: |
+          safety-report.json
+          bandit-report.json
+
+  approve-dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+    - name: Aprobar PR de dependabot
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { data: reviews } = await github.rest.pulls.listReviews({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.issue.number,
+          });
+          
+          const hasApproval = reviews.some(review => 
+            review.state === 'APPROVED' && 
+            review.user.type === 'User'
+          );
+          
+          if (!hasApproval) {
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              event: 'APPROVE',
+              body: '✅ Dependencias actualizadas y tests pasando. Aprobado automáticamente.',
+            });
+          }

@@ -1,0 +1,68 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "notacool"
+    assignees:
+      - "notacool"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "python"
+    ignore:
+      # Ignorar actualizaciones mayores que pueden romper compatibilidad
+      - dependency-name: "Pillow"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "easyocr"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "PyPDF2"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "reportlab"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "notacool"
+    assignees:
+      - "notacool"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Docker (si se usa en el futuro)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "notacool"
+    assignees:
+      - "notacool"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
