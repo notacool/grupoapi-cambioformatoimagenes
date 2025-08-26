@@ -26,7 +26,12 @@ class PDFEasyOCRConverter(BaseConverter):
             config: Configuración del conversor
         """
         super().__init__(config)
-        self.ocr_language = config.get("ocr_language", "es")
+        # EasyOCR espera un string, no una lista
+        ocr_lang = config.get("ocr_language", "es")
+        if isinstance(ocr_lang, list):
+            self.ocr_language = ocr_lang[0] if ocr_lang else "es"
+        else:
+            self.ocr_language = ocr_lang
         self.create_searchable_pdf = config.get("create_searchable_pdf", True)
         self.page_size = config.get("page_size", "A4")
         self.fit_to_page = config.get("fit_to_page", True)
@@ -122,13 +127,17 @@ class PDFEasyOCRConverter(BaseConverter):
                 x = (page_width - scaled_width) / 2
                 y = (page_height - scaled_height) / 2
 
-                # Convertir imagen a bytes para ReportLab
-                img_bytes = io.BytesIO()
-                img.save(img_bytes, format="JPEG", quality=95)
-                img_bytes.seek(0)
-
-                # Agregar imagen al PDF
-                canvas.drawImage(img_bytes, x, y, scaled_width, scaled_height)
+                # Crear archivo temporal para ReportLab
+                import tempfile
+                import os
+                
+                with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
+                    img.save(temp_file.name, format="JPEG", quality=95)
+                    # Agregar imagen al PDF
+                    canvas.drawImage(temp_file.name, x, y, scaled_width, scaled_height)
+                
+                # Limpiar archivo temporal
+                os.unlink(temp_file.name)
 
                 # Realizar OCR si está habilitado
                 if self.create_searchable_pdf:

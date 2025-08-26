@@ -26,20 +26,20 @@ formats:
     page_size: "A4"                 # Tamaño de página
     fit_to_page: true                # Ajustar imagen a la página
     ocr_language: ["es", "en"]      # Lista de idiomas para OCR
-    ocr_confidence: 0.5             # Confianza mínima para OCR (0.0-1.0)
+    ocr_confidence: 0.2             # Confianza mínima para OCR (0.0-1.0)
     create_searchable_pdf: true      # Crear PDF con texto buscable
     use_gpu: false                  # Usar GPU si está disponible
 
 # Configuración de procesamiento
 processing:
-  max_workers: 4                     # Número máximo de workers paralelos
-  batch_size: 10                     # Tamaño del lote de procesamiento
+  max_workers: 1                     # Número máximo de workers paralelos
+  batch_size: 2                     # Tamaño del lote de procesamiento
   overwrite_existing: false          # Sobrescribir archivos existentes
 
 # Configuración de salida
 output:
   create_subdirectories: true        # Crear subdirectorios por formato
-  naming_pattern: "{original_name}_{format}_{dpi}"  # Patrón de nombres con DPI
+  naming_pattern: "{original_name}"  #"{original_name}_{format}_{dpi}"  # Patrón de nombres con DPI
 
 # Configuración de metadatos MET
 met_metadata:
@@ -48,9 +48,9 @@ met_metadata:
   include_file_metadata: true        # Incluir metadatos del archivo
   include_processing_info: true      # Incluir información de procesamiento
   metadata_standard: 'MET'           # Estándar METS
-  organization: 'Conversor TIFF'     # Nombre de la organización
+  organization: 'Grupo API'          # Nombre de la organización
   creator: 'Sistema Automatizado'    # Sistema creador
-  generate_all_met: true             # true: archivos con timestamp, false: un archivo por formato
+  generate_all_met: false            # true: archivos con timestamp, false: un archivo por formato
 
 # Notas:
 # - Los valores se pueden modificar según las necesidades
