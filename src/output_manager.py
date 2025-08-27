@@ -12,8 +12,8 @@ class OutputManager:
 
     def __init__(self):
         """Inicializa el gestor de salida"""
-        self.main_pbar: Optional[tqdm] = None
-        self.info_pbar: Optional[tqdm] = None
+        self.main_pbar: tqdm = None
+        self.info_pbar: tqdm = None
 
     def set_main_progress_bar(self, pbar: tqdm):
         """Establece la barra de progreso principal"""

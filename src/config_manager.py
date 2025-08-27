@@ -14,7 +14,7 @@ from .output_manager import output_manager
 class ConfigManager:
     """Gestor de configuración del conversor"""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str = None):
         """
         Inicializa el gestor de configuración
 

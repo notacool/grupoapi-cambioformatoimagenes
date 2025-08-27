@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Tuple
 import easyocr
 import numpy as np
 from PIL import Image
-from reportlab.lib.pagesizes import A4
+
 from reportlab.pdfgen import canvas as reportlab_canvas
 
 from ..output_manager import output_manager
@@ -116,23 +116,25 @@ class PDFEasyOCRConverter(BaseConverter):
                 # Obtener dimensiones
                 img_width, img_height = pil_img.size
 
-                # Crear PDF con ReportLab
-                canvas_obj = reportlab_canvas.Canvas(str(output_path), pagesize=A4)
-                page_width, page_height = A4
+                # Crear PDF con tamaño exacto de la imagen (sin bordes)
+                # Convertir píxeles a puntos (1 punto = 1/72 pulgada)
+                # Asumiendo 300 DPI para la conversión
+                dpi = 300
+                points_per_inch = 72
+                scale_factor = points_per_inch / dpi
 
-                # Calcular escala para ajustar a la página
-                if self.fit_to_page:
-                    scale_x = page_width / img_width
-                    scale_y = page_height / img_height
-                    scale = min(scale_x, scale_y) * 0.9  # 90% para márgenes
-                else:
-                    scale = 1.0
+                page_width = img_width * scale_factor
+                page_height = img_height * scale_factor
 
-                # Calcular posición centrada
-                scaled_width = img_width * scale
-                scaled_height = img_height * scale
-                x = (page_width - scaled_width) / 2
-                y = (page_height - scaled_height) / 2
+                # Crear PDF con tamaño personalizado
+                canvas_obj = reportlab_canvas.Canvas(
+                    str(output_path), pagesize=(page_width, page_height)
+                )
+
+                # Sin escalado, usar tamaño original
+                scale = 1.0
+                x = 0
+                y = 0
 
                 # Crear archivo temporal para ReportLab
                 import os
@@ -142,10 +144,8 @@ class PDFEasyOCRConverter(BaseConverter):
                     suffix=".jpg", delete=False
                 ) as temp_file:
                     pil_img.save(temp_file.name, format="JPEG", quality=95)
-                    # Agregar imagen al PDF
-                    canvas_obj.drawImage(
-                        temp_file.name, x, y, scaled_width, scaled_height
-                    )
+                    # Agregar imagen al PDF ocupando toda la página
+                    canvas_obj.drawImage(temp_file.name, x, y, page_width, page_height)
 
                 # Limpiar archivo temporal
                 os.unlink(temp_file.name)
@@ -167,8 +167,8 @@ class PDFEasyOCRConverter(BaseConverter):
         canvas: reportlab_canvas.Canvas,
         img: Image.Image,
         scale: float,
-        x: float,
-        y: float,
+        offset_x: float,
+        offset_y: float,
     ) -> None:
         """
         Agrega una capa de texto invisible al PDF basada en OCR
@@ -177,8 +177,8 @@ class PDFEasyOCRConverter(BaseConverter):
             canvas: Canvas de ReportLab
             img: Imagen PIL
             scale: Factor de escala aplicado
-            x: Posición X en el PDF
-            y: Posición Y en el PDF
+            offset_x: Desplazamiento X (siempre 0 ahora)
+            offset_y: Desplazamiento Y (siempre 0 ahora)
         """
         try:
             # Convertir imagen PIL a array numpy para EasyOCR
@@ -188,7 +188,7 @@ class PDFEasyOCRConverter(BaseConverter):
             ocr_results = self.ocr_reader.readtext(img_array)
 
             # Procesar resultados del OCR
-            text_elements = self._process_easyocr_results(ocr_results, scale, x, y)
+            text_elements = self._process_easyocr_results(ocr_results, img.height)
 
             # Agregar texto invisible al PDF
             for text_element in text_elements:
@@ -198,16 +198,14 @@ class PDFEasyOCRConverter(BaseConverter):
             output_manager.error(f"Error agregando capa de texto: {str(e)}")
 
     def _process_easyocr_results(
-        self, results: List[Tuple], scale: float, offset_x: float, offset_y: float
+        self, results: List[Tuple], img_height: int
     ) -> List[Dict]:
         """
         Procesa los resultados de EasyOCR para extraer texto y posiciones
 
         Args:
             results: Resultados del OCR de EasyOCR
-            scale: Factor de escala
-            offset_x: Desplazamiento X
-            offset_y: Desplazamiento Y
+            img_height: Altura de la imagen en píxeles
 
         Returns:
             Lista de elementos de texto procesados
@@ -222,12 +220,18 @@ class PDFEasyOCRConverter(BaseConverter):
                 y_coords = points[:, 1]
 
                 # Calcular posición en el PDF
-                pdf_x = min(x_coords) * scale + offset_x
-                pdf_y = A4[1] - (max(y_coords) * scale + offset_y)
+                # Convertir coordenadas de imagen a coordenadas de PDF
+                dpi = 300
+                points_per_inch = 72
+                scale_factor = points_per_inch / dpi
+
+                pdf_x = min(x_coords) * scale_factor
+                # Invertir coordenada Y (ReportLab usa coordenadas desde abajo)
+                pdf_y = (img_height - max(y_coords)) * scale_factor
 
                 # Calcular dimensiones del texto
-                width = (max(x_coords) - min(x_coords)) * scale
-                height = (max(y_coords) - min(y_coords)) * scale
+                width = (max(x_coords) - min(x_coords)) * scale_factor
+                height = (max(y_coords) - min(y_coords)) * scale_factor
 
                 text_elements.append(
                     {
