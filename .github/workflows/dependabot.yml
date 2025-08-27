@@ -87,7 +87,7 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
     - name: Aprobar PR de dependabot
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const { data: reviews } = await github.rest.pulls.listReviews({
