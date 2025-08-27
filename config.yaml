@@ -28,7 +28,7 @@ formats:
     ocr_language: ["es", "en"]      # Lista de idiomas para OCR
     ocr_confidence: 0.2             # Confianza mínima para OCR (0.0-1.0)
     create_searchable_pdf: true      # Crear PDF con texto buscable
-    use_gpu: false                  # Usar GPU si está disponible
+    use_gpu: true                  # Usar GPU si está disponible
 
 # Configuración de procesamiento
 processing:
@@ -51,6 +51,18 @@ met_metadata:
   organization: 'Grupo API'          # Nombre de la organización
   creator: 'Sistema Automatizado'    # Sistema creador
   generate_all_met: false            # true: archivos con timestamp, false: un archivo por formato
+
+# Configuración de postconversores
+postconverters:
+  # Postconversor MET por formato
+  met_format:
+    enabled: true                    # Habilitar generación de archivos MET por formato
+    include_image_metadata: true     # Incluir metadatos técnicos de imagen
+    include_file_metadata: true      # Incluir metadatos del archivo
+    include_processing_info: true    # Incluir información de procesamiento
+    metadata_standard: 'MET'         # Estándar METS
+    organization: 'Grupo API'        # Nombre de la organización
+    creator: 'Sistema Automatizado'  # Sistema creador
 
 # Notas:
 # - Los valores se pueden modificar según las necesidades

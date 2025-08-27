@@ -1,88 +1,53 @@
 """
-Procesador de archivos para encontrar y organizar archivos TIFF
+Procesador de archivos para el conversor TIFF
 """
 
+import os
+import shutil
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import List, Optional
+
+from .output_manager import output_manager
 
 
 class FileProcessor:
-    """Procesador de archivos TIFF"""
+    """Procesa archivos y directorios para el conversor TIFF"""
 
     def __init__(self, input_dir: str, output_dir: str):
         """
         Inicializa el procesador de archivos
 
         Args:
-            input_dir: Directorio de entrada con archivos TIFF
-            output_dir: Directorio de salida para las conversiones
+            input_dir: Directorio de entrada
+            output_dir: Directorio de salida
         """
         self.input_dir = Path(input_dir)
         self.output_dir = Path(output_dir)
-        self.tiff_files = []
-        self._scan_tiff_files()
+        self._tiff_files = None  # Lazy loading
 
-    def _scan_tiff_files(self) -> None:
-        """Escanea el directorio de entrada en busca de archivos TIFF"""
-        if not self.input_dir.exists():
-            raise ValueError(f"El directorio de entrada no existe: {self.input_dir}")
-
-        if not self.input_dir.is_dir():
-            raise ValueError(
-                f"La ruta de entrada no es un directorio: {self.input_dir}"
-            )
-
-        # Buscar archivos TIFF (case-insensitive)
-        self.tiff_files = []
-
-        for file_path in self.input_dir.rglob("*"):
-            if file_path.is_file() and file_path.suffix.lower() in [".tiff", ".tif"]:
-                self.tiff_files.append(file_path)
-
-        print(f"Encontrados {len(self.tiff_files)} archivos TIFF en: {self.input_dir}")
+    def _get_tiff_files(self) -> List[Path]:
+        """Obtiene la lista de archivos TIFF del directorio de entrada"""
+        tiff_files = []
+        if self.input_dir.exists() and self.input_dir.is_dir():
+            for file_path in self.input_dir.iterdir():
+                if file_path.is_file() and file_path.suffix.lower() in [".tif", ".tiff"]:
+                    tiff_files.append(file_path)
+        
+        output_manager.info(f"Encontrados {len(tiff_files)} archivos TIFF en: {self.input_dir}")
+        return tiff_files
 
     def get_tiff_files(self) -> List[Path]:
-        """Retorna la lista de archivos TIFF encontrados"""
-        return self.tiff_files.copy()
+        """Retorna la lista de archivos TIFF"""
+        if self._tiff_files is None:
+            self._tiff_files = self._get_tiff_files()
+        return self._tiff_files
 
-    def get_file_info(self, file_path: Path) -> Dict[str, Any]:
-        """
-        Obtiene información detallada de un archivo TIFF
-
-        Args:
-            file_path: Ruta del archivo
-
-        Returns:
-            Diccionario con información del archivo
-        """
-        try:
-            stat = file_path.stat()
-            return {
-                "name": file_path.name,
-                "size": stat.st_size,
-                "size_mb": round(stat.st_size / (1024 * 1024), 2),
-                "modified": stat.st_mtime,
-                "relative_path": file_path.relative_to(self.input_dir),
-                "absolute_path": str(file_path),
-            }
-        except Exception as e:
-            return {
-                "name": file_path.name,
-                "error": str(e),
-                "relative_path": file_path.relative_to(self.input_dir),
-                "absolute_path": str(file_path),
-            }
-
-    def get_all_files_info(self) -> List[Dict[str, Any]]:
-        """Retorna información de todos los archivos TIFF"""
-        return [self.get_file_info(file_path) for file_path in self.tiff_files]
-
-    def create_output_structure(self, create_subdirectories: bool = True) -> bool:
+    def create_output_structure(self, create_subdirs: bool = True) -> bool:
         """
         Crea la estructura de directorios de salida
 
         Args:
-            create_subdirectories: Si crear subdirectorios para cada formato
+            create_subdirs: Si crear subdirectorios por formato
 
         Returns:
             True si se creó correctamente
@@ -91,58 +56,74 @@ class FileProcessor:
             # Crear directorio principal de salida
             self.output_dir.mkdir(parents=True, exist_ok=True)
 
-            if create_subdirectories:
+            if create_subdirs:
                 # Crear subdirectorios para cada formato
-                formats = ["jpg_400", "jpg_200", "pdf_easyocr", "met_metadata"]
-                for format_name in formats:
-                    format_dir = self.output_dir / format_name
-                    format_dir.mkdir(exist_ok=True)
+                subdirs = [
+                    "jpg_400",
+                    "jpg_200", 
+                    "pdf_easyocr",
+                    "met_metadata"
+                ]
+                
+                for subdir in subdirs:
+                    subdir_path = self.output_dir / subdir
+                    subdir_path.mkdir(exist_ok=True)
 
-            print(f"Estructura de salida creada en: {self.output_dir}")
+            output_manager.info(f"Estructura de salida creada en: {self.output_dir}")
             return True
 
         except Exception as e:
-            print(f"Error creando estructura de salida: {str(e)}")
+            output_manager.error(f"Error creando estructura de salida: {str(e)}")
             return False
 
     def get_output_path(
-        self, input_file: Path, format_name: str, create_subdirectories: bool = True
+        self, 
+        input_file: Path, 
+        format_name: str, 
+        create_subdirs: bool = True
     ) -> Path:
         """
-        Genera la ruta de salida para un archivo convertido
+        Genera la ruta de salida para un archivo
 
         Args:
             input_file: Archivo de entrada
             format_name: Nombre del formato de salida
-            create_subdirectories: Si usar subdirectorios
+            create_subdirs: Si crear subdirectorios
 
         Returns:
             Ruta de salida generada
         """
-        if create_subdirectories:
+        if create_subdirs:
             # Crear subdirectorio para el formato
             format_dir = self.output_dir / format_name
             format_dir.mkdir(exist_ok=True)
-            output_dir = format_dir
+            
+            # Generar nombre de archivo
+            if format_name == "jpg_400":
+                filename = f"{input_file.stem}_400dpi.jpg"
+            elif format_name == "jpg_200":
+                filename = f"{input_file.stem}_200dpi.jpg"
+            elif format_name == "pdf_easyocr":
+                filename = f"{input_file.stem}_EasyOCR.pdf"
+            elif format_name == "met_metadata":
+                filename = f"{input_file.stem}_MET.xml"
+            else:
+                filename = f"{input_file.stem}_{format_name}{self._get_extension(format_name)}"
+            
+            return format_dir / filename
         else:
-            output_dir = self.output_dir
+            # Sin subdirectorios
+            return self.output_dir / f"{input_file.stem}_{format_name}{self._get_extension(format_name)}"
 
-        # Generar nombre de archivo de salida
-        stem = input_file.stem
-        extension = self._get_format_extension(format_name)
-        output_filename = f"{stem}_{format_name}{extension}"
-
-        return output_dir / output_filename
-
-    def _get_format_extension(self, format_name: str) -> str:
-        """Obtiene la extensión de archivo para un formato específico"""
+    def _get_extension(self, format_name: str) -> str:
+        """Retorna la extensión para un formato"""
         extensions = {
             "jpg_400": ".jpg",
             "jpg_200": ".jpg",
             "pdf_easyocr": ".pdf",
-            "met_metadata": ".xml",
+            "met_metadata": ".xml"
         }
-        return extensions.get(format_name, ".unknown")
+        return extensions.get(format_name, "")
 
     def validate_output_path(self, output_path: Path, overwrite: bool = False) -> bool:
         """
@@ -156,92 +137,43 @@ class FileProcessor:
             True si se puede escribir
         """
         try:
-            # Verificar si el archivo ya existe
-            if output_path.exists():
-                if not overwrite:
-                    print(f"Archivo ya existe (omitir): {output_path.name}")
-                    return False
-                print(f"Sobrescribiendo archivo existente: {output_path.name}")
-
-            # Verificar si se puede escribir en el directorio
             output_dir = output_path.parent
+            
+            # Verificar si el directorio existe
             if not output_dir.exists():
                 output_dir.mkdir(parents=True, exist_ok=True)
-
+            
+            # Verificar si el archivo ya existe
+            if output_path.exists():
+                if overwrite:
+                    output_manager.info(f"Sobrescribiendo archivo existente: {output_path.name}")
+                    return True
+                else:
+                    output_manager.info(f"Archivo ya existe (omitir): {output_path.name}")
+                    return False
+            
             # Verificar permisos de escritura
-            try:
-                # Crear archivo temporal para probar permisos
-                test_file = output_dir / ".test_write_permissions"
-                test_file.touch()
-                test_file.unlink()
-            except Exception:
-                print(f"Sin permisos de escritura en: {output_dir}")
+            if not os.access(output_dir, os.W_OK):
+                output_manager.error(f"Sin permisos de escritura en: {output_dir}")
                 return False
-
+            
             return True
 
         except Exception as e:
-            print(f"Error validando ruta de salida: {str(e)}")
+            output_manager.error(f"Error validando ruta de salida: {str(e)}")
             return False
 
-    def get_directory_stats(self) -> Dict[str, Any]:
-        """
-        Obtiene estadísticas del directorio de entrada
-
-        Returns:
-            Diccionario con estadísticas
-        """
+    def cleanup_empty_directories(self) -> None:
+        """Limpia directorios vacíos en el directorio de salida"""
         try:
-            total_files = len(self.tiff_files)
-            total_size = sum(file_path.stat().st_size for file_path in self.tiff_files)
-            total_size_mb = round(total_size / (1024 * 1024), 2)
-
-            # Agrupar por extensión
-            extensions = {}
-            for file_path in self.tiff_files:
-                ext = file_path.suffix.lower()
-                if ext not in extensions:
-                    extensions[ext] = []
-                extensions[ext].append(file_path)
-
-            return {
-                "total_files": total_files,
-                "total_size_bytes": total_size,
-                "total_size_mb": total_size_mb,
-                "extensions": {ext: len(files) for ext, files in extensions.items()},
-                "input_directory": str(self.input_dir),
-                "output_directory": str(self.output_dir),
-            }
-
+            for item in self.output_dir.iterdir():
+                if item.is_dir():
+                    # Verificar si el directorio está vacío
+                    if not any(item.iterdir()):
+                        try:
+                            item.rmdir()
+                            output_manager.info(f"Directorio vacío eliminado: {item}")
+                        except OSError as e:
+                            output_manager.warning(f"No se pudo eliminar directorio: {item} - {str(e)}")
         except Exception as e:
-            return {
-                "error": str(e),
-                "input_directory": str(self.input_dir),
-                "output_directory": str(self.output_dir),
-            }
-
-    def cleanup_empty_directories(self) -> bool:
-        """
-        Elimina directorios vacíos en la salida
-
-        Returns:
-            True si se limpió correctamente
-        """
-        try:
-            if not self.output_dir.exists():
-                return True
-
-            # Buscar directorios vacíos recursivamente
-            for dir_path in sorted(self.output_dir.rglob("*"), reverse=True):
-                if dir_path.is_dir() and not any(dir_path.iterdir()):
-                    try:
-                        dir_path.rmdir()
-                        print(f"Directorio vacío eliminado: {dir_path}")
-                    except Exception as e:
-                        print(f"No se pudo eliminar directorio: {dir_path} - {str(e)}")
-
-            return True
-
-        except Exception as e:
-            print(f"Error limpiando directorios vacíos: {str(e)}")
-            return False
+            output_manager.error(f"Error limpiando directorios vacíos: {str(e)}")

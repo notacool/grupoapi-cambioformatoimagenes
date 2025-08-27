@@ -1,58 +1,47 @@
 """
-Gestor de configuración para el conversor de archivos TIFF
+Gestor de configuración para el conversor TIFF
 """
 
+import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
+
+from .output_manager import output_manager
 
 
 class ConfigManager:
     """Gestor de configuración del conversor"""
 
-    def __init__(self, config_path: str = None):
+    def __init__(self, config_path: Optional[str] = None):
         """
         Inicializa el gestor de configuración
 
         Args:
             config_path: Ruta al archivo de configuración (opcional)
         """
-        self.config_path = config_path or self._get_default_config_path()
+        self.config_path = config_path or "config.yaml"
         self.config = self._load_config()
-
-    def _get_default_config_path(self) -> str:
-        """Obtiene la ruta por defecto del archivo de configuración"""
-        # Buscar en el directorio actual o en el directorio del script
-        current_dir = Path.cwd()
-        script_dir = Path(__file__).parent.parent
-
-        # Prioridad: directorio actual, luego directorio del script
-        for search_dir in [current_dir, script_dir]:
-            config_file = search_dir / "config.yaml"
-            if config_file.exists():
-                return str(config_file)
-
-        # Si no existe, crear uno por defecto en el directorio actual
-        return str(current_dir / "config.yaml")
 
     def _load_config(self) -> Dict[str, Any]:
         """Carga la configuración desde el archivo YAML"""
         try:
-            if Path(self.config_path).exists():
+            if os.path.exists(self.config_path):
                 with open(self.config_path, "r", encoding="utf-8") as file:
                     config = yaml.safe_load(file)
-                    print(f"Configuración cargada desde: {self.config_path}")
+                    output_manager.info(f"Configuración cargada desde: {self.config_path}")
+                    return self._validate_config(config)
             else:
+                # Crear archivo de configuración por defecto
                 config = self._get_default_config()
                 self._save_config(config)
-                print(f"Archivo de configuración creado en: {self.config_path}")
-
-            return self._validate_config(config)
+                output_manager.info(f"Archivo de configuración creado en: {self.config_path}")
+                return config
 
         except Exception as e:
-            print(f"Error cargando configuración: {str(e)}")
-            print("Usando configuración por defecto")
+            output_manager.error(f"Error cargando configuración: {str(e)}")
+            output_manager.info("Usando configuración por defecto")
             return self._get_default_config()
 
     def _get_default_config(self) -> Dict[str, Any]:
@@ -144,7 +133,7 @@ class ConfigManager:
                 yaml.dump(config, file, default_flow_style=False, allow_unicode=True)
             return True
         except Exception as e:
-            print(f"Error guardando configuración: {str(e)}")
+            output_manager.error(f"Error guardando configuración: {str(e)}")
             return False
 
     def get_format_config(self, format_name: str) -> Dict[str, Any]:
@@ -207,7 +196,7 @@ class ConfigManager:
             self.config.update(new_config)
             return self._save_config(self.config)
         except Exception as e:
-            print(f"Error actualizando configuración: {str(e)}")
+            output_manager.error(f"Error actualizando configuración: {str(e)}")
             return False
 
     def reload_config(self) -> bool:
@@ -221,5 +210,5 @@ class ConfigManager:
             self.config = self._load_config()
             return True
         except Exception as e:
-            print(f"Error recargando configuración: {str(e)}")
+            output_manager.error(f"Error recargando configuración: {str(e)}")
             return False

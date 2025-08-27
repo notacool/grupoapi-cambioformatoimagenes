@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict
 
+from ..output_manager import output_manager
+
 
 class BaseConverter(ABC):
     """Clase base abstracta para todos los conversores"""
@@ -51,7 +53,7 @@ class BaseConverter(ABC):
 
     def validate_input(self, input_path: Path) -> bool:
         """
-        Valida si el archivo de entrada es válido
+        Valida que el archivo de entrada sea válido
 
         Args:
             input_path: Ruta del archivo de entrada
@@ -60,23 +62,25 @@ class BaseConverter(ABC):
             True si el archivo es válido
         """
         try:
+            # Verificar que el archivo existe
             if not input_path.exists():
-                print(f"Error: El archivo de entrada no existe: {input_path}")
+                output_manager.error(f"Error: El archivo de entrada no existe: {input_path}")
                 return False
 
+            # Verificar que es un archivo
             if not input_path.is_file():
-                print(f"Error: La ruta de entrada no es un archivo: {input_path}")
+                output_manager.error(f"Error: La ruta de entrada no es un archivo: {input_path}")
                 return False
 
-            # Verificar extensión TIFF
-            if input_path.suffix.lower() not in [".tiff", ".tif"]:
-                print(f"Error: El archivo no es TIFF: {input_path}")
+            # Verificar que es un archivo TIFF
+            if input_path.suffix.lower() not in [".tif", ".tiff"]:
+                output_manager.error(f"Error: El archivo no es TIFF: {input_path}")
                 return False
 
             return True
 
         except Exception as e:
-            print(f"Error validando archivo de entrada: {str(e)}")
+            output_manager.error(f"Error validando archivo de entrada: {str(e)}")
             return False
 
     def create_output_directory(self, output_path: Path) -> bool:
@@ -95,7 +99,7 @@ class BaseConverter(ABC):
             return True
 
         except Exception as e:
-            print(f"Error creando directorio de salida: {str(e)}")
+            output_manager.error(f"Error creando directorio de salida: {str(e)}")
             return False
 
     def get_output_filename(self, input_path: Path, output_dir: Path) -> Path:

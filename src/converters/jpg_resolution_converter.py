@@ -22,14 +22,14 @@ class JPGResolutionConverter(BaseConverter):
             config: Configuración del conversor
         """
         super().__init__(config)
-        self.quality = config.get("quality", 95)
+        self.quality = config.get("quality", 90)
         self.optimize = config.get("optimize", True)
         self.progressive = config.get("progressive", False)
-        self.dpi = config.get("dpi", 300)
+        self.dpi = config.get("dpi", 200)
 
     def convert(self, input_path: Path, output_path: Path) -> bool:
         """
-        Convierte un archivo TIFF a JPG con la resolución especificada
+        Convierte un archivo TIFF a JPG
 
         Args:
             input_path: Ruta del archivo TIFF de entrada
@@ -41,12 +41,12 @@ class JPGResolutionConverter(BaseConverter):
         try:
             # Validar entrada
             if not self.validate_input(input_path):
-                print(f"Error: Archivo de entrada inválido: {input_path}")
+                output_manager.error(f"Error: Archivo de entrada inválido: {input_path}")
                 return False
 
             # Crear directorio de salida
             if not self.create_output_directory(output_path):
-                print(
+                output_manager.error(
                     f"Error: No se pudo crear el directorio de salida: {output_path.parent}"
                 )
                 return False
@@ -54,28 +54,8 @@ class JPGResolutionConverter(BaseConverter):
             # Abrir imagen TIFF
             with Image.open(input_path) as img:
                 # Convertir a RGB si es necesario
-                if img.mode not in ["RGB", "L"]:
+                if img.mode in ("RGBA", "LA", "P"):
                     img = img.convert("RGB")
-
-                # Calcular nueva resolución basada en DPI
-                original_dpi = img.info.get("dpi", (72, 72))[0]
-                if original_dpi > 0:
-                    scale_factor = self.dpi / original_dpi
-                    # Limitar el factor de escala para evitar MemoryError
-                    scale_factor = min(scale_factor, 2.0)
-                    new_width = int(img.width * scale_factor)
-                    new_height = int(img.height * scale_factor)
-
-                    # Limitar dimensiones máximas
-                    max_dimension = 8000
-                    if new_width > max_dimension or new_height > max_dimension:
-                        scale_factor = min(
-                            max_dimension / img.width, max_dimension / img.height
-                        )
-                        new_width = int(img.width * scale_factor)
-                        new_height = int(img.height * scale_factor)
-
-                    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
                 # Guardar como JPG
                 img.save(
@@ -87,37 +67,35 @@ class JPGResolutionConverter(BaseConverter):
                     dpi=(self.dpi, self.dpi),
                 )
 
-            print(f"✅ Convertido: {input_path.name} -> {output_path.name}")
             return True
 
         except Exception as e:
-            print(f"❌ Error convirtiendo {input_path.name}: {str(e)}")
-            traceback.print_exc()
+            output_manager.error(f"❌ Error convirtiendo {input_path.name}: {str(e)}")
             return False
 
     def get_file_extension(self) -> str:
-        """Retorna la extensión del archivo JPG"""
+        """Retorna la extensión del archivo de salida"""
         return ".jpg"
 
-    def get_output_filename(self, input_path: Path, output_dir: Path) -> Path:
+    def get_output_filename(self, input_file: Path, output_dir: Path) -> Path:
         """
-        Genera el nombre del archivo de salida con subdirectorio específico
+        Genera el nombre del archivo de salida
 
         Args:
-            input_path: Archivo de entrada
-            output_dir: Directorio base de salida
+            input_file: Archivo de entrada
+            output_dir: Directorio de salida
 
         Returns:
-            Ruta completa del archivo de salida
+            Ruta del archivo de salida
         """
-        # Crear subdirectorio específico para este formato
-        format_subdir = output_dir / f"jpg_{self.dpi}"
-        format_subdir.mkdir(exist_ok=True)
-
-        stem = input_path.stem
-        extension = self.get_file_extension()
-        filename = f"{stem}_{self.dpi}dpi{extension}"
-        return format_subdir / filename
+        if self.dpi == 400:
+            filename = f"{input_file.stem}_400dpi.jpg"
+        elif self.dpi == 200:
+            filename = f"{input_file.stem}_200dpi.jpg"
+        else:
+            filename = f"{input_file.stem}_{self.dpi}dpi.jpg"
+        
+        return output_dir / filename
 
     def get_converter_info(self) -> Dict[str, Any]:
         """

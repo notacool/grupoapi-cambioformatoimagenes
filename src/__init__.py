@@ -1,7 +1,16 @@
 """
-Conversor de Archivos TIFF
-Un sistema modular para convertir archivos TIFF a múltiples formatos
+Conversor de Archivos TIFF - Módulo principal
 """
 
-__version__ = "1.0.0"
-__author__ = "Tu Nombre"
+from .config_manager import ConfigManager
+from .converter import TIFFConverter
+from .file_processor import FileProcessor
+from .output_manager import OutputManager, output_manager
+
+__all__ = [
+    "ConfigManager",
+    "TIFFConverter", 
+    "FileProcessor",
+    "OutputManager",
+    "output_manager"
+]

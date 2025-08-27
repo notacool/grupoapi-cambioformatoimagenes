@@ -2,17 +2,17 @@
 Conversor de TIFF a PDF con OCR usando EasyOCR
 """
 
-import io
-from pathlib import Path
-from typing import Any, Dict, List, Tuple
-
 import easyocr
-import numpy as np
-from PIL import Image
+from pathlib import Path
+from typing import Dict, Any, List, Optional, Tuple
+
 from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen.canvas import Canvas
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Image as RLImage
 
 from .base import BaseConverter
+from ..output_manager import output_manager
 
 
 class PDFEasyOCRConverter(BaseConverter):
@@ -26,12 +26,7 @@ class PDFEasyOCRConverter(BaseConverter):
             config: Configuración del conversor
         """
         super().__init__(config)
-        # EasyOCR espera un string, no una lista
-        ocr_lang = config.get("ocr_language", "es")
-        if isinstance(ocr_lang, list):
-            self.ocr_language = ocr_lang[0] if ocr_lang else "es"
-        else:
-            self.ocr_language = ocr_lang
+        self.ocr_language = config.get("ocr_language", ["es"])
         self.create_searchable_pdf = config.get("create_searchable_pdf", True)
         self.page_size = config.get("page_size", "A4")
         self.fit_to_page = config.get("fit_to_page", True)
@@ -40,13 +35,19 @@ class PDFEasyOCRConverter(BaseConverter):
         self._initialize_easyocr()
 
     def _initialize_easyocr(self) -> None:
-        """Inicializa el lector de EasyOCR"""
+        """Inicializa EasyOCR con el idioma especificado"""
         try:
-            print(f"Inicializando EasyOCR con idioma: {self.ocr_language}")
-            self.ocr_reader = easyocr.Reader([self.ocr_language])
-            print("✅ EasyOCR inicializado correctamente")
+            if isinstance(self.ocr_language, str):
+                languages = [self.ocr_language]
+            else:
+                languages = self.ocr_language
+
+            output_manager.info(f"Inicializando EasyOCR con idioma: {languages[0]}")
+            self.ocr_reader = easyocr.Reader(languages, gpu=False)
+            output_manager.success("✅ EasyOCR inicializado correctamente")
+
         except Exception as e:
-            print(f"❌ Error inicializando EasyOCR: {str(e)}")
+            output_manager.error(f"❌ Error inicializando EasyOCR: {str(e)}")
             self.ocr_reader = None
 
     def convert(self, input_path: Path, output_path: Path) -> bool:
@@ -63,29 +64,29 @@ class PDFEasyOCRConverter(BaseConverter):
         try:
             # Validar entrada
             if not self.validate_input(input_path):
-                print(f"Error: Archivo de entrada inválido: {input_path}")
+                output_manager.error(f"Error: Archivo de entrada inválido: {input_path}")
                 return False
 
             # Crear directorio de salida
             if not self.create_output_directory(output_path):
-                print(
+                output_manager.error(
                     f"Error: No se pudo crear el directorio de salida: {output_path.parent}"
                 )
                 return False
 
             # Verificar que EasyOCR esté disponible
             if not self.ocr_reader:
-                print("❌ EasyOCR no está disponible")
+                output_manager.error("❌ EasyOCR no está disponible")
                 return False
 
             # Crear PDF con OCR
             success = self._create_pdf_with_easyocr(input_path, output_path)
             if success:
-                print(f"✅ Convertido: {input_path.name} -> {output_path.name}")
+                output_manager.success(f"✅ Convertido: {input_path.name} -> {output_path.name}")
             return success
 
         except Exception as e:
-            print(f"❌ Error convirtiendo {input_path.name}: {str(e)}")
+            output_manager.error(f"❌ Error convirtiendo {input_path.name}: {str(e)}")
             return False
 
     def _create_pdf_with_easyocr(self, input_path: Path, output_path: Path) -> bool:
@@ -101,7 +102,7 @@ class PDFEasyOCRConverter(BaseConverter):
         """
         try:
             # Abrir imagen TIFF
-            with Image.open(input_path) as img:
+            with RLImage(input_path) as img:
                 # Convertir a RGB si es necesario
                 if img.mode not in ["RGB", "L"]:
                     img = img.convert("RGB")
@@ -110,7 +111,7 @@ class PDFEasyOCRConverter(BaseConverter):
                 img_width, img_height = img.size
 
                 # Crear PDF con ReportLab
-                canvas = Canvas(str(output_path), pagesize=A4)
+                canvas_obj = canvas.Canvas(str(output_path), pagesize=A4)
                 page_width, page_height = A4
 
                 # Calcular escala para ajustar a la página
@@ -134,25 +135,25 @@ class PDFEasyOCRConverter(BaseConverter):
                 with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
                     img.save(temp_file.name, format="JPEG", quality=95)
                     # Agregar imagen al PDF
-                    canvas.drawImage(temp_file.name, x, y, scaled_width, scaled_height)
+                    canvas_obj.drawImage(temp_file.name, x, y, scaled_width, scaled_height)
                 
                 # Limpiar archivo temporal
                 os.unlink(temp_file.name)
 
                 # Realizar OCR si está habilitado
                 if self.create_searchable_pdf:
-                    self._add_text_layer_to_pdf(canvas, img, scale, x, y)
+                    self._add_text_layer_to_pdf(canvas_obj, img, scale, x, y)
 
-                canvas.save()
+                canvas_obj.save()
 
             return True
 
         except Exception as e:
-            print(f"Error creando PDF: {str(e)}")
+            output_manager.error(f"Error creando PDF: {str(e)}")
             return False
 
     def _add_text_layer_to_pdf(
-        self, canvas: Canvas, img: Image.Image, scale: float, x: float, y: float
+        self, canvas: canvas.Canvas, img: RLImage, scale: float, x: float, y: float
     ) -> None:
         """
         Agrega una capa de texto invisible al PDF basada en OCR
@@ -166,7 +167,7 @@ class PDFEasyOCRConverter(BaseConverter):
         """
         try:
             # Realizar OCR en la imagen
-            ocr_results = self.ocr_reader.readtext(np.array(img))
+            ocr_results = self.ocr_reader.readtext(img.getImage())
 
             # Procesar resultados del OCR
             text_elements = self._process_easyocr_results(ocr_results, scale, x, y)
@@ -176,7 +177,7 @@ class PDFEasyOCRConverter(BaseConverter):
                 self._create_text_layer_easyocr(canvas, text_element)
 
         except Exception as e:
-            print(f"Error agregando capa de texto: {str(e)}")
+            output_manager.error(f"Error agregando capa de texto: {str(e)}")
 
     def _process_easyocr_results(
         self, results: List[Tuple], scale: float, offset_x: float, offset_y: float
@@ -223,7 +224,7 @@ class PDFEasyOCRConverter(BaseConverter):
 
         return text_elements
 
-    def _create_text_layer_easyocr(self, canvas: Canvas, text_element: Dict) -> None:
+    def _create_text_layer_easyocr(self, canvas: canvas.Canvas, text_element: Dict) -> None:
         """
         Crea una capa de texto invisible en el PDF
 
@@ -242,7 +243,7 @@ class PDFEasyOCRConverter(BaseConverter):
             )
 
         except Exception as e:
-            print(f"Error creando capa de texto: {str(e)}")
+            output_manager.error(f"Error creando capa de texto: {str(e)}")
 
     def get_file_extension(self) -> str:
         """Retorna la extensión del archivo PDF"""

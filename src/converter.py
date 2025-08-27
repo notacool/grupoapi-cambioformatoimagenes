@@ -16,6 +16,8 @@ from .converters import (
     PDFEasyOCRConverter,
 )
 from .file_processor import FileProcessor
+from .output_manager import output_manager
+from .postconverters import METFormatPostConverter
 
 
 class TIFFConverter:
@@ -30,6 +32,7 @@ class TIFFConverter:
         """
         self.config_manager = ConfigManager(config_path)
         self.converters = self._initialize_converters()
+        self.postconverters = self._initialize_postconverters()
 
     def _initialize_converters(self) -> Dict[str, Any]:
         """Inicializa todos los conversores disponibles"""
@@ -53,10 +56,28 @@ class TIFFConverter:
         # MET Metadata Converter
         if self.config_manager.is_format_enabled("met_metadata"):
             met_metadata_config = self.config_manager.get_format_config("met_metadata")
+            # Agregar configuración del nivel superior para MET
+            met_metadata_config.update(self.config_manager.config.get("met_metadata", {}))
             converters["met_metadata"] = METMetadataConverter(met_metadata_config)
 
-        print(f"Conversores inicializados: {list(converters.keys())}")
+        output_manager.info(f"Conversores inicializados: {list(converters.keys())}")
         return converters
+
+    def _initialize_postconverters(self) -> Dict[str, Any]:
+        """Inicializa todos los postconversores disponibles"""
+        postconverters = {}
+
+        # MET Format PostConverter
+        if self.config_manager.config.get("postconverters", {}).get("met_format", {}).get("enabled", False):
+            met_format_config = self.config_manager.config.get("postconverters", {}).get("met_format", {})
+            postconverters["met_format"] = METFormatPostConverter(met_format_config)
+
+        if postconverters:
+            output_manager.info(f"Postconversores inicializados: {list(postconverters.keys())}")
+        else:
+            output_manager.info("No hay postconversores habilitados")
+
+        return postconverters
 
     def convert_directory(
         self,
@@ -124,10 +145,10 @@ class TIFFConverter:
             max_workers = max_workers or processing_config.get("max_workers", 4)
             overwrite = processing_config.get("overwrite_existing", False)
 
-            print(
+            output_manager.info(
                 f"Procesando {len(tiff_files)} archivos TIFF a {len(formats)} formatos..."
             )
-            print(f"Usando {max_workers} workers en paralelo")
+            output_manager.info(f"Usando {max_workers} workers en paralelo")
 
             # Estadísticas
             total_conversions = len(tiff_files) * len(formats)
@@ -135,15 +156,83 @@ class TIFFConverter:
             failed_conversions = 0
 
             # Procesar archivos
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            files_info = []  # Para almacenar información detallada de cada archivo
+            
+            # Crear barra de progreso principal
+            with tqdm(
+                total=total_conversions, 
+                desc="Convirtiendo archivos",
+                position=0,
+                leave=True
+            ) as main_pbar:
+                # Configurar el gestor de salida
+                output_manager.set_main_progress_bar(main_pbar)
+                
                 # Crear tareas
                 future_to_task = {}
+                
+                # Usar ThreadPoolExecutor para procesamiento paralelo
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    for tiff_file in tiff_files:
+                        for format_name in formats:
+                            converter = self.converters[format_name]
 
-                for tiff_file in tiff_files:
-                    for format_name in formats:
+                            # Usar método personalizado de nombre si está disponible
+                            if hasattr(converter, "get_output_filename"):
+                                output_path = converter.get_output_filename(
+                                    tiff_file, file_processor.output_dir
+                                )
+                            else:
+                                output_path = file_processor.get_output_path(
+                                    tiff_file, format_name, create_subdirs
+                                )
+
+                            # Validar ruta de salida
+                            if not file_processor.validate_output_path(
+                                output_path, overwrite
+                            ):
+                                continue
+
+                            # Enviar tarea al executor
+                            future = executor.submit(
+                                converter.convert, tiff_file, output_path
+                            )
+                            future_to_task[future] = (tiff_file.name, format_name)
+
+                # Procesar resultados con barra de progreso
+                for future in as_completed(future_to_task):
+                    file_name, format_name = future_to_task[future]
+
+                    try:
+                        success = future.result()
+                        if success:
+                            successful_conversions += 1
+                        else:
+                            failed_conversions += 1
+                    except Exception as e:
+                        output_manager.error(
+                            f"Error procesando {file_name} a {format_name}: {str(e)}"
+                        )
+                        failed_conversions += 1
+
+                    main_pbar.update(1)
+                    main_pbar.set_postfix(
+                        {
+                            "Exitosas": successful_conversions,
+                            "Fallidas": failed_conversions,
+                        }
+                    )
+
+            # Recopilar información detallada de los archivos procesados
+            for tiff_file in tiff_files:
+                file_info = {
+                    "input_file": str(tiff_file),
+                    "conversions": {}
+                }
+                
+                for format_name in formats:
+                    if format_name in self.converters:
                         converter = self.converters[format_name]
-
-                        # Usar método personalizado de nombre si está disponible
                         if hasattr(converter, "get_output_filename"):
                             output_path = converter.get_output_filename(
                                 tiff_file, file_processor.output_dir
@@ -152,45 +241,20 @@ class TIFFConverter:
                             output_path = file_processor.get_output_path(
                                 tiff_file, format_name, create_subdirs
                             )
-
-                        # Validar ruta de salida
-                        if not file_processor.validate_output_path(
-                            output_path, overwrite
-                        ):
-                            continue
-
-                        # Enviar tarea al executor
-                        future = executor.submit(
-                            converter.convert, tiff_file, output_path
-                        )
-                        future_to_task[future] = (tiff_file.name, format_name)
-
-                # Procesar resultados con barra de progreso
-                with tqdm(
-                    total=total_conversions, desc="Convirtiendo archivos"
-                ) as pbar:
-                    for future in as_completed(future_to_task):
-                        file_name, format_name = future_to_task[future]
-
-                        try:
-                            success = future.result()
-                            if success:
-                                successful_conversions += 1
-                            else:
-                                failed_conversions += 1
-                        except Exception as e:
-                            print(
-                                f"Error procesando {file_name} a {format_name}: {str(e)}"
-                            )
-                            failed_conversions += 1
-
-                        pbar.update(1)
-                        pbar.set_postfix(
-                            {
-                                "Exitosas": successful_conversions,
-                                "Fallidas": failed_conversions,
+                        
+                        # Verificar si el archivo existe (conversión exitosa)
+                        if output_path.exists():
+                            file_info["conversions"][format_name] = {
+                                "success": True,
+                                "output_path": str(output_path)
                             }
-                        )
+                        else:
+                            file_info["conversions"][format_name] = {
+                                "success": False,
+                                "output_path": str(output_path)
+                            }
+                
+                files_info.append(file_info)
 
             # Calcular tiempo total
             time_elapsed = time.time() - start_time
@@ -206,12 +270,17 @@ class TIFFConverter:
                 "time_elapsed": round(time_elapsed, 2),
                 "input_directory": input_dir,
                 "output_directory": output_dir,
+                "files_info": files_info # Incluir la información detallada
             }
 
             self._print_summary(result)
 
             # Generar archivos MET por formato si está habilitado
-            if self.config_manager.config.get("met_metadata", {}).get("enabled", False):
+            met_metadata_enabled = (
+                self.config_manager.is_format_enabled("met_metadata") or
+                self.config_manager.config.get("met_metadata", {}).get("enabled", False)
+            )
+            if met_metadata_enabled:
                 self._generate_format_specific_met(result, output_dir)
 
             return result
@@ -229,37 +298,40 @@ class TIFFConverter:
 
     def _print_summary(self, result: Dict[str, Any]) -> None:
         """Imprime un resumen de la conversión"""
-        print("\n" + "=" * 50)
-        print("RESUMEN DE CONVERSIÓN")
-        print("=" * 50)
+        output_manager.section("RESUMEN DE CONVERSIÓN")
+        output_manager.separator()
 
         if result["success"]:
-            print("✅ Conversión completada exitosamente")
-            print(f"📁 Archivos procesados: {result['files_processed']}")
-            print(f"🔄 Formatos procesados: {', '.join(result['formats_processed'])}")
-            print(f"✅ Conversiones exitosas: {result['conversions_successful']}")
-            print(f"❌ Conversiones fallidas: {result['conversions_failed']}")
-            print(f"⏱️  Tiempo total: {result['time_elapsed']} segundos")
-            print(f"📂 Directorio de entrada: {result['input_directory']}")
-            print(f"📂 Directorio de salida: {result['output_directory']}")
+            output_manager.success("Conversión completada exitosamente")
+            output_manager.format_info("📁 Archivos procesados", result['files_processed'])
+            output_manager.format_list("🔄 Formatos procesados", result['formats_processed'])
+            output_manager.format_info("✅ Conversiones exitosas", result['conversions_successful'])
+            output_manager.format_info("❌ Conversiones fallidas", result['conversions_failed'])
+            output_manager.format_info("⏱️  Tiempo total", f"{result['time_elapsed']} segundos")
+            output_manager.format_info("📂 Directorio de entrada", result['input_directory'])
+            output_manager.format_info("📂 Directorio de salida", result['output_directory'])
 
             # Información específica de los formatos
             if "jpg_400" in result["formats_processed"]:
-                print("🖼️  JPG 400 DPI: Alta resolución para impresión")
+                output_manager.info("🖼️  JPG 400 DPI: Alta resolución para impresión")
             if "jpg_200" in result["formats_processed"]:
-                print("🖼️  JPG 200 DPI: Resolución media para web")
+                output_manager.info("🖼️  JPG 200 DPI: Resolución media para web")
             if "pdf_easyocr" in result["formats_processed"]:
-                print("📄 PDF con EasyOCR: Texto buscable y seleccionable")
+                output_manager.info("📄 PDF con EasyOCR: Texto buscable y seleccionable")
             if "met_metadata" in result["formats_processed"]:
-                print("📋 MET Metadata: Archivos XML con metadatos detallados")
+                output_manager.info("📋 MET Metadata: Archivos XML con metadatos detallados")
         else:
-            print(f"❌ Error en la conversión: {result['error']}")
+            output_manager.error(f"Error en la conversión: {result['error']}")
 
-        print("=" * 50)
+        output_manager.separator()
 
     def get_available_formats(self) -> List[str]:
         """Retorna la lista de formatos disponibles"""
         return list(self.converters.keys())
+
+    def get_available_postconverters(self) -> List[str]:
+        """Retorna la lista de postconversores disponibles"""
+        return list(self.postconverters.keys())
 
     def get_converter_info(self, format_name: str) -> Optional[Dict[str, Any]]:
         """
@@ -311,102 +383,63 @@ class TIFFConverter:
             output_dir: Directorio de salida
         """
         try:
-            if not result.get("success") or "met_metadata" not in self.converters:
+            if not result.get("success"):
                 return
 
-            # Obtener el conversor MET
-            met_converter = self.converters["met_metadata"]
-
-            # Preparar los resultados para los archivos MET por formato
-            conversion_results = []
-
-            # Recopilar información de todos los archivos procesados
-            for file_info in result.get("files_info", []):
-                input_file = Path(file_info["input_file"])
-                output_files = []
-
-                # Agregar información de cada formato generado
-                for format_name in result.get("formats_processed", []):
-                    if format_name in file_info.get("conversions", {}):
-                        conversion = file_info["conversions"][format_name]
-                        if conversion.get("success"):
-                            output_path = Path(conversion["output_path"])
-                            output_files.append(
-                                {
-                                    "format": format_name,
-                                    "path": output_path,
-                                    "size": (
-                                        output_path.stat().st_size
-                                        if output_path.exists()
-                                        else 0
-                                    ),
-                                }
-                            )
-
-                conversion_results.append(
-                    {
-                        "input_file": input_file,
-                        "output_files": output_files,
-                        "success": len(output_files) > 0,
-                    }
-                )
-
-            # Generar archivos MET por formato
-            if hasattr(met_converter, "create_format_specific_met"):
-                results = met_converter.create_format_specific_met(
-                    conversion_results, output_dir
-                )
-
-                # Mostrar resumen de generación
-                successful_formats = [
-                    fmt for fmt, success in results.items() if success
-                ]
-                failed_formats = [
-                    fmt for fmt, success in results.items() if not success
-                ]
-
-                if successful_formats:
-                    print(
-                        f"✅ Archivos MET generados para: {', '.join(successful_formats)}"
-                    )
-                if failed_formats:
-                    print(f"❌ Errores generando MET para: {', '.join(failed_formats)}")
-
-            else:
-                print("⚠️  Conversor MET no soporta archivos por formato")
+            # Ejecutar postconversores habilitados
+            for postconverter_name, postconverter in self.postconverters.items():
+                try:
+                    output_manager.info(f"Ejecutando postconversor: {postconverter.get_name()}")
+                    success = postconverter.process(result, output_dir)
+                    if success:
+                        output_manager.success(f"Postconversor {postconverter_name} ejecutado exitosamente")
+                    else:
+                        output_manager.warning(f"Postconversor {postconverter_name} tuvo problemas")
+                except Exception as e:
+                    output_manager.error(f"Error ejecutando postconversor {postconverter_name}: {str(e)}")
 
         except Exception as e:
-            print(f"❌ Error generando archivos MET por formato: {str(e)}")
+            output_manager.error(f"Error ejecutando postconversores: {str(e)}")
 
 
 def main():
     """Función main para ejecutar el conversor como módulo"""
-    print("🔧 CONVERSOR TIFF - MÓDULO PRINCIPAL")
-    print("=" * 40)
+    output_manager.section("🔧 CONVERSOR TIFF - MÓDULO PRINCIPAL")
+    output_manager.separator("=", 40)
 
     try:
         converter = TIFFConverter()
-        print("✅ Conversor inicializado correctamente")
-        print(f"📁 Formatos disponibles: {converter.get_available_formats()}")
+        output_manager.success("Conversor inicializado correctamente")
+        output_manager.format_info("📁 Formatos disponibles", converter.get_available_formats())
+        output_manager.format_info("🔄 Postconversores disponibles", converter.get_available_postconverters())
 
         # Mostrar información de cada conversor
         for format_name in converter.get_available_formats():
             info = converter.get_converter_info(format_name)
             if info:
-                print(f"\n📋 {format_name.upper()}:")
-                print(f"   Clase: {info['name']}")
-                print(f"   Extensión: {info['extension']}")
+                output_manager.section(f"📋 {format_name.upper()}:")
+                output_manager.format_info("   Clase", info['name'])
+                output_manager.format_info("   Extensión", info['extension'])
                 if "dpi" in info:
-                    print(f"   DPI: {info['dpi']}")
+                    output_manager.format_info("   DPI", info['dpi'])
+                if "quality" in info:
+                    output_manager.format_info("   Calidad", info['quality'])
                 if "ocr_language" in info:
-                    print(f"   OCR: {info['ocr_language']}")
+                    output_manager.format_info("   OCR", info['ocr_language'])
 
-        print("\n💡 Para usar el conversor:")
-        print("   python main.py --input 'entrada' --output 'salida'")
-        print("   python main.py --info")
+        # Mostrar información de postconversores
+        if converter.get_available_postconverters():
+            output_manager.section("🔄 POSTCONVERSORES:")
+            for postconverter_name in converter.get_available_postconverters():
+                postconverter = converter.postconverters[postconverter_name]
+                output_manager.format_info(f"   {postconverter_name}", postconverter.get_name())
+
+        output_manager.section("💡 Para usar el conversor:")
+        output_manager.info("   python main.py --input 'entrada' --output 'salida'")
+        output_manager.info("   python main.py --info")
 
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        output_manager.error(f"Error: {str(e)}")
         return False
 
     return True
