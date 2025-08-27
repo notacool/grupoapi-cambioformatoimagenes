@@ -10,7 +10,7 @@ jobs:
         python-version: ["3.8", "3.9", "3.10"]
     steps:
     - name: Checkout código
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Configurar Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
