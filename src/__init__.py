@@ -9,8 +9,8 @@ from .output_manager import OutputManager, output_manager
 
 __all__ = [
     "ConfigManager",
-    "TIFFConverter", 
+    "TIFFConverter",
     "FileProcessor",
     "OutputManager",
-    "output_manager"
+    "output_manager",
 ]

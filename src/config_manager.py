@@ -4,7 +4,7 @@ Gestor de configuración para el conversor TIFF
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import yaml
 
@@ -30,13 +30,17 @@ class ConfigManager:
             if os.path.exists(self.config_path):
                 with open(self.config_path, "r", encoding="utf-8") as file:
                     config = yaml.safe_load(file)
-                    output_manager.info(f"Configuración cargada desde: {self.config_path}")
+                    output_manager.info(
+                        f"Configuración cargada desde: {self.config_path}"
+                    )
                     return self._validate_config(config)
             else:
                 # Crear archivo de configuración por defecto
                 config = self._get_default_config()
                 self._save_config(config)
-                output_manager.info(f"Archivo de configuración creado en: {self.config_path}")
+                output_manager.info(
+                    f"Archivo de configuración creado en: {self.config_path}"
+                )
                 return config
 
         except Exception as e:

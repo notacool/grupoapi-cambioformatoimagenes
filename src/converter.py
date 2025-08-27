@@ -57,7 +57,9 @@ class TIFFConverter:
         if self.config_manager.is_format_enabled("met_metadata"):
             met_metadata_config = self.config_manager.get_format_config("met_metadata")
             # Agregar configuración del nivel superior para MET
-            met_metadata_config.update(self.config_manager.config.get("met_metadata", {}))
+            met_metadata_config.update(
+                self.config_manager.config.get("met_metadata", {})
+            )
             converters["met_metadata"] = METMetadataConverter(met_metadata_config)
 
         output_manager.info(f"Conversores inicializados: {list(converters.keys())}")
@@ -68,12 +70,20 @@ class TIFFConverter:
         postconverters = {}
 
         # MET Format PostConverter
-        if self.config_manager.config.get("postconverters", {}).get("met_format", {}).get("enabled", False):
-            met_format_config = self.config_manager.config.get("postconverters", {}).get("met_format", {})
+        if (
+            self.config_manager.config.get("postconverters", {})
+            .get("met_format", {})
+            .get("enabled", False)
+        ):
+            met_format_config = self.config_manager.config.get(
+                "postconverters", {}
+            ).get("met_format", {})
             postconverters["met_format"] = METFormatPostConverter(met_format_config)
 
         if postconverters:
-            output_manager.info(f"Postconversores inicializados: {list(postconverters.keys())}")
+            output_manager.info(
+                f"Postconversores inicializados: {list(postconverters.keys())}"
+            )
         else:
             output_manager.info("No hay postconversores habilitados")
 
@@ -121,9 +131,7 @@ class TIFFConverter:
                 available_formats = list(self.converters.keys())
                 formats = [f for f in formats if f in available_formats]
                 if not formats:
-                    error_msg = (
-                    f"No hay conversores disponibles para los formatos especificados: {formats}"
-                )
+                    error_msg = f"No hay conversores disponibles para los formatos especificados: {formats}"
                     return {
                         "success": False,
                         "error": error_msg,
@@ -157,20 +165,20 @@ class TIFFConverter:
 
             # Procesar archivos
             files_info = []  # Para almacenar información detallada de cada archivo
-            
+
             # Crear barra de progreso principal
             with tqdm(
-                total=total_conversions, 
+                total=total_conversions,
                 desc="Convirtiendo archivos",
                 position=0,
-                leave=True
+                leave=True,
             ) as main_pbar:
                 # Configurar el gestor de salida
                 output_manager.set_main_progress_bar(main_pbar)
-                
+
                 # Crear tareas
                 future_to_task = {}
-                
+
                 # Usar ThreadPoolExecutor para procesamiento paralelo
                 with ThreadPoolExecutor(max_workers=max_workers) as executor:
                     for tiff_file in tiff_files:
@@ -225,11 +233,8 @@ class TIFFConverter:
 
             # Recopilar información detallada de los archivos procesados
             for tiff_file in tiff_files:
-                file_info = {
-                    "input_file": str(tiff_file),
-                    "conversions": {}
-                }
-                
+                file_info = {"input_file": str(tiff_file), "conversions": {}}
+
                 for format_name in formats:
                     if format_name in self.converters:
                         converter = self.converters[format_name]
@@ -241,19 +246,19 @@ class TIFFConverter:
                             output_path = file_processor.get_output_path(
                                 tiff_file, format_name, create_subdirs
                             )
-                        
+
                         # Verificar si el archivo existe (conversión exitosa)
                         if output_path.exists():
                             file_info["conversions"][format_name] = {
                                 "success": True,
-                                "output_path": str(output_path)
+                                "output_path": str(output_path),
                             }
                         else:
                             file_info["conversions"][format_name] = {
                                 "success": False,
-                                "output_path": str(output_path)
+                                "output_path": str(output_path),
                             }
-                
+
                 files_info.append(file_info)
 
             # Calcular tiempo total
@@ -270,18 +275,21 @@ class TIFFConverter:
                 "time_elapsed": round(time_elapsed, 2),
                 "input_directory": input_dir,
                 "output_directory": output_dir,
-                "files_info": files_info # Incluir la información detallada
+                "files_info": files_info,  # Incluir la información detallada
             }
 
             self._print_summary(result)
 
             # Generar archivos MET por formato si está habilitado
-            met_metadata_enabled = (
-                self.config_manager.is_format_enabled("met_metadata") or
-                self.config_manager.config.get("met_metadata", {}).get("enabled", False)
+            met_metadata_enabled = self.config_manager.is_format_enabled(
+                "met_metadata"
+            ) or self.config_manager.config.get("met_metadata", {}).get(
+                "enabled", False
             )
             if met_metadata_enabled:
-                self._generate_format_specific_met(result, output_dir)
+                # Convertir output_dir a Path antes de pasarlo al postconverter
+                output_path = Path(output_dir)
+                self._generate_format_specific_met(result, output_path)
 
             return result
 
@@ -303,13 +311,27 @@ class TIFFConverter:
 
         if result["success"]:
             output_manager.success("Conversión completada exitosamente")
-            output_manager.format_info("📁 Archivos procesados", result['files_processed'])
-            output_manager.format_list("🔄 Formatos procesados", result['formats_processed'])
-            output_manager.format_info("✅ Conversiones exitosas", result['conversions_successful'])
-            output_manager.format_info("❌ Conversiones fallidas", result['conversions_failed'])
-            output_manager.format_info("⏱️  Tiempo total", f"{result['time_elapsed']} segundos")
-            output_manager.format_info("📂 Directorio de entrada", result['input_directory'])
-            output_manager.format_info("📂 Directorio de salida", result['output_directory'])
+            output_manager.format_info(
+                "📁 Archivos procesados", result["files_processed"]
+            )
+            output_manager.format_list(
+                "🔄 Formatos procesados", result["formats_processed"]
+            )
+            output_manager.format_info(
+                "✅ Conversiones exitosas", result["conversions_successful"]
+            )
+            output_manager.format_info(
+                "❌ Conversiones fallidas", result["conversions_failed"]
+            )
+            output_manager.format_info(
+                "⏱️  Tiempo total", f"{result['time_elapsed']} segundos"
+            )
+            output_manager.format_info(
+                "📂 Directorio de entrada", result["input_directory"]
+            )
+            output_manager.format_info(
+                "📂 Directorio de salida", result["output_directory"]
+            )
 
             # Información específica de los formatos
             if "jpg_400" in result["formats_processed"]:
@@ -317,9 +339,13 @@ class TIFFConverter:
             if "jpg_200" in result["formats_processed"]:
                 output_manager.info("🖼️  JPG 200 DPI: Resolución media para web")
             if "pdf_easyocr" in result["formats_processed"]:
-                output_manager.info("📄 PDF con EasyOCR: Texto buscable y seleccionable")
+                output_manager.info(
+                    "📄 PDF con EasyOCR: Texto buscable y seleccionable"
+                )
             if "met_metadata" in result["formats_processed"]:
-                output_manager.info("📋 MET Metadata: Archivos XML con metadatos detallados")
+                output_manager.info(
+                    "📋 MET Metadata: Archivos XML con metadatos detallados"
+                )
         else:
             output_manager.error(f"Error en la conversión: {result['error']}")
 
@@ -389,14 +415,22 @@ class TIFFConverter:
             # Ejecutar postconversores habilitados
             for postconverter_name, postconverter in self.postconverters.items():
                 try:
-                    output_manager.info(f"Ejecutando postconversor: {postconverter.get_name()}")
+                    output_manager.info(
+                        f"Ejecutando postconversor: {postconverter.get_name()}"
+                    )
                     success = postconverter.process(result, output_dir)
                     if success:
-                        output_manager.success(f"Postconversor {postconverter_name} ejecutado exitosamente")
+                        output_manager.success(
+                            f"Postconversor {postconverter_name} ejecutado exitosamente"
+                        )
                     else:
-                        output_manager.warning(f"Postconversor {postconverter_name} tuvo problemas")
+                        output_manager.warning(
+                            f"Postconversor {postconverter_name} tuvo problemas"
+                        )
                 except Exception as e:
-                    output_manager.error(f"Error ejecutando postconversor {postconverter_name}: {str(e)}")
+                    output_manager.error(
+                        f"Error ejecutando postconversor {postconverter_name}: {str(e)}"
+                    )
 
         except Exception as e:
             output_manager.error(f"Error ejecutando postconversores: {str(e)}")
@@ -410,29 +444,35 @@ def main():
     try:
         converter = TIFFConverter()
         output_manager.success("Conversor inicializado correctamente")
-        output_manager.format_info("📁 Formatos disponibles", converter.get_available_formats())
-        output_manager.format_info("🔄 Postconversores disponibles", converter.get_available_postconverters())
+        output_manager.format_info(
+            "📁 Formatos disponibles", converter.get_available_formats()
+        )
+        output_manager.format_info(
+            "🔄 Postconversores disponibles", converter.get_available_postconverters()
+        )
 
         # Mostrar información de cada conversor
         for format_name in converter.get_available_formats():
             info = converter.get_converter_info(format_name)
             if info:
                 output_manager.section(f"📋 {format_name.upper()}:")
-                output_manager.format_info("   Clase", info['name'])
-                output_manager.format_info("   Extensión", info['extension'])
+                output_manager.format_info("   Clase", info["name"])
+                output_manager.format_info("   Extensión", info["extension"])
                 if "dpi" in info:
-                    output_manager.format_info("   DPI", info['dpi'])
+                    output_manager.format_info("   DPI", info["dpi"])
                 if "quality" in info:
-                    output_manager.format_info("   Calidad", info['quality'])
+                    output_manager.format_info("   Calidad", info["quality"])
                 if "ocr_language" in info:
-                    output_manager.format_info("   OCR", info['ocr_language'])
+                    output_manager.format_info("   OCR", info["ocr_language"])
 
         # Mostrar información de postconversores
         if converter.get_available_postconverters():
             output_manager.section("🔄 POSTCONVERSORES:")
             for postconverter_name in converter.get_available_postconverters():
                 postconverter = converter.postconverters[postconverter_name]
-                output_manager.format_info(f"   {postconverter_name}", postconverter.get_name())
+                output_manager.format_info(
+                    f"   {postconverter_name}", postconverter.get_name()
+                )
 
         output_manager.section("💡 Para usar el conversor:")
         output_manager.info("   python main.py --input 'entrada' --output 'salida'")

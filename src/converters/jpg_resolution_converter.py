@@ -2,12 +2,12 @@
 Conversor de TIFF a JPG con resolución configurable
 """
 
-import traceback
 from pathlib import Path
 from typing import Any, Dict
 
 from PIL import Image
 
+from ..output_manager import output_manager
 from .base import BaseConverter
 
 
@@ -41,7 +41,9 @@ class JPGResolutionConverter(BaseConverter):
         try:
             # Validar entrada
             if not self.validate_input(input_path):
-                output_manager.error(f"Error: Archivo de entrada inválido: {input_path}")
+                output_manager.error(
+                    f"Error: Archivo de entrada inválido: {input_path}"
+                )
                 return False
 
             # Crear directorio de salida
@@ -77,25 +79,36 @@ class JPGResolutionConverter(BaseConverter):
         """Retorna la extensión del archivo de salida"""
         return ".jpg"
 
-    def get_output_filename(self, input_file: Path, output_dir: Path) -> Path:
+    def get_output_filename(self, input_path: Path, output_dir: Path) -> Path:
         """
-        Genera el nombre del archivo de salida
+        Genera el nombre del archivo de salida con subdirectorio específico
 
         Args:
-            input_file: Archivo de entrada
-            output_dir: Directorio de salida
+            input_path: Archivo de entrada
+            output_dir: Directorio base de salida
 
         Returns:
-            Ruta del archivo de salida
+            Ruta completa del archivo de salida
         """
+        # Crear subdirectorio específico para este formato
         if self.dpi == 400:
-            filename = f"{input_file.stem}_400dpi.jpg"
+            format_subdir = output_dir / "jpg_400"
         elif self.dpi == 200:
-            filename = f"{input_file.stem}_200dpi.jpg"
+            format_subdir = output_dir / "jpg_200"
         else:
-            filename = f"{input_file.stem}_{self.dpi}dpi.jpg"
-        
-        return output_dir / filename
+            format_subdir = output_dir / f"jpg_{self.dpi}"
+
+        format_subdir.mkdir(exist_ok=True)
+
+        # Generar nombre de archivo
+        if self.dpi == 400:
+            filename = f"{input_path.stem}_400dpi.jpg"
+        elif self.dpi == 200:
+            filename = f"{input_path.stem}_200dpi.jpg"
+        else:
+            filename = f"{input_path.stem}_{self.dpi}dpi.jpg"
+
+        return format_subdir / filename
 
     def get_converter_info(self) -> Dict[str, Any]:
         """

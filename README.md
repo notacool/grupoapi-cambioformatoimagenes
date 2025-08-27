@@ -1,342 +1,366 @@
-# Conversor de Archivos TIFF
+# 🖼️ Conversor TIFF - Sistema de Conversión y Metadatos
 
-Un proyecto Python para convertir archivos TIFF a múltiples formatos de imagen de manera configurable, con funcionalidades avanzadas de resolución y **OCR integrado**.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
 
-## 🎯 **Objetivos Principales**
+## 🎯 Descripción
 
-- **🖼️ JPG 400 DPI**: Alta resolución para impresión profesional
-- **🖼️ JPG 200 DPI**: Resolución media para uso web y digital
-- **📄 PDF con EasyOCR**: PDF con texto buscable usando reconocimiento óptico de caracteres
-- **📋 MET Metadata**: Archivos XML con metadatos detallados siguiendo estándares internacionales
+El **Conversor TIFF** es un sistema avanzado de conversión de archivos TIFF que genera múltiples formatos de salida (JPG, PDF con OCR, XML MET) con metadatos completos y organización automática de archivos. Diseñado para archivos, bibliotecas y sistemas de gestión documental.
 
-## 🔍 **OCR con EasyOCR**
+## ✨ Características Principales
 
-### **EasyOCR (Local - Recomendado)**
-- **Ventajas**: Fácil instalación, soporte nativo Python, múltiples idiomas
-- **Idiomas**: 80+ idiomas incluyendo español e inglés
-- **Uso**: Ideal para procesamiento local y archivos confidenciales
-- **Instalación**: Automática, los modelos se descargan en la primera ejecución
+### 🔄 **Conversores de Formato**
+- **JPG 400 DPI**: Alta resolución para impresión profesional
+- **JPG 200 DPI**: Resolución media optimizada para web
+- **PDF con EasyOCR**: Texto buscable y seleccionable con reconocimiento óptico
+- **Metadatos MET**: Archivos XML con estándar MET de la Library of Congress
 
-## 📋 **Conversor MET Metadata**
+### 📊 **Postconversores Avanzados**
+- **MET Format PostConverter**: Genera XMLs consolidados por formato que incluyen:
+  - Metadatos completos de archivos TIFF originales
+  - Información de archivos convertidos
+  - Estructura PREMIS para preservación digital
+  - Organización automática en carpetas por formato
 
-### **Estándar METS (Metadata Encoding and Transmission Standard)**
-- **Propósito**: Generar metadatos XML estructurados para archivos TIFF
-- **Estándar**: Cumple con METS de la Library of Congress
-- **Casos de uso**: Preservación digital, catálogos, gestión documental
-- **Metadatos incluidos**: Información técnica, del archivo, de procesamiento y checksums MD5
-- **Archivos por formato**: Genera archivos XML MET separados, uno por cada tipo de formato convertido, cada uno con su propio tab PREMIS
+### 🗂️ **Organización Inteligente**
+- **Estructura automática de carpetas**: Cada formato se organiza en su subdirectorio
+- **Nomenclatura consistente**: Patrones de nombres estandarizados
+- **Metadatos integrados**: Información técnica y administrativa completa
 
-### **Opciones de Generación Configurables**
-- **Archivos con timestamp**: `generate_all_met: true` → `MET_JPG_400_20250825_151044.xml`
-- **Archivos únicos por formato**: `generate_all_met: false` → `jpg_400.xml`, `pdf_easyocr.xml`
-- **Flexibilidad**: Se puede cambiar entre ambos modos sin modificar el código
+## 🚀 Instalación
 
-## Características
+### Requisitos Previos
 
-- **Procesamiento por lotes**: Convierte todos los archivos TIFF de una carpeta
-- **Conversores configurables**: Sistema modular para agregar nuevos formatos de salida
-- **Múltiples resoluciones JPG**: Control preciso de DPI para diferentes usos
-- **OCR integrado**: PDF con texto buscable usando EasyOCR
-- **Metadatos MET**: Generación de archivos XML con estándares internacionales, uno por cada formato
-- **Nombres de archivos configurables**: Opción para archivos con timestamp o nombres fijos por formato
-- **Interfaz CLI**: Fácil de usar desde la línea de comandos
-- **Configuración flexible**: Archivos YAML para personalizar conversores
-- **Procesamiento paralelo**: Múltiples workers para mayor velocidad
+- Python 3.8 o superior
+- Dependencias del sistema (ver sección de dependencias)
 
-## Instalación
+### Instalación Rápida
 
-1. Clona o descarga este proyecto
-2. Instala las dependencias:
 ```bash
+# Clonar el repositorio
+git clone https://github.com/tu-usuario/conversor-tiff.git
+cd conversor-tiff
+
+# Instalar dependencias
 pip install -r requirements.txt
+
+# Verificar instalación
+python main.py --info
 ```
 
-### 🔧 **Requisitos de OCR**
+## ⚙️ Configuración
 
-#### **EasyOCR (Incluido)**
-```bash
-pip install easyocr
-# Los modelos se descargan automáticamente en la primera ejecución
+### Archivo de Configuración Principal
+
+El sistema utiliza `config.yaml` para configurar todos los aspectos:
+
+```yaml
+# Configuración de formatos de salida
+formats:
+  # Conversor JPG 400 DPI (alta resolución)
+  jpg_400:
+    enabled: true
+    quality: 95                      # Calidad de compresión (1-100)
+    optimize: true                   # Optimizar archivo
+    progressive: false               # JPEG progresivo
+    dpi: 400                        # Resolución en DPI
+  
+  # Conversor JPG 200 DPI (media resolución)
+  jpg_200:
+    enabled: true
+    quality: 90                      # Calidad de compresión (1-100)
+    optimize: true                   # Optimizar archivo
+    progressive: true                # JPEG progresivo
+    dpi: 200                        # Resolución en DPI
+  
+  # Conversor PDF con EasyOCR
+  pdf_easyocr:
+    enabled: true
+    resolution: 300                  # Resolución en DPI
+    page_size: "A4"                 # Tamaño de página
+    fit_to_page: true                # Ajustar imagen a la página
+    ocr_language: ["es", "en"]      # Idiomas para OCR
+    ocr_confidence: 0.2             # Confianza mínima para OCR
+    create_searchable_pdf: true      # Crear PDF con texto buscable
+    use_gpu: true                    # Usar GPU si está disponible
+
+  # Conversor MET Metadata
+  met_metadata:
+    enabled: true
+    include_image_metadata: true     # Incluir DPI, dimensiones, orientación
+    include_file_metadata: true      # Incluir tamaño, fechas, permisos
+    include_processing_info: true    # Incluir información de procesamiento
+    metadata_standard: "MET"        # Estándar de metadatos
+    organization: "Conversor TIFF"   # Nombre de la organización
+    creator: "Sistema Automatizado"  # Creador del sistema
+
+# Configuración de procesamiento
+processing:
+  max_workers: 1                     # Número máximo de workers paralelos
+  batch_size: 2                      # Tamaño del lote de procesamiento
+  overwrite_existing: false          # Sobrescribir archivos existentes
+
+# Configuración de salida
+output:
+  create_subdirectories: true        # Crear subdirectorios por formato
+  naming_pattern: "{original_name}_{format}"  # Patrón de nombres
+
+# Configuración de postconversores
+postconverters:
+  met_format:
+    enabled: true
+    include_image_metadata: true     # Incluir metadatos de imagen
+    include_file_metadata: true      # Incluir metadatos de archivo
+    include_processing_info: true    # Incluir información de procesamiento
+    metadata_standard: "MET"        # Estándar de metadatos
+    organization: "Conversor TIFF"   # Nombre de la organización
+    creator: "Sistema Automatizado"  # Creador del sistema
 ```
 
-## Uso
+### Configuraciones Especializadas
 
-### Uso básico
-```bash
-python main.py --input "ruta/a/carpeta" --output "ruta/salida"
+#### Configuración para Preservación Digital
+```yaml
+formats:
+  jpg_400:
+    enabled: true
+    quality: 100                     # Máxima calidad
+    optimize: false                  # Sin optimización para preservación
+    dpi: 400                        # Alta resolución
+
+postconverters:
+  met_format:
+    enabled: true
+    include_image_metadata: true     # Metadatos técnicos completos
+    include_file_metadata: true      # Información de archivo completa
+    metadata_standard: "MET"        # Estándar institucional
+    organization: "Archivo Nacional"
+    creator: "Sistema de Preservación Digital v2.0"
 ```
 
-### Opciones disponibles
-- `--input`: Carpeta con archivos TIFF a convertir
-- `--output`: Carpeta de destino para las conversiones
-- `--formats`: Formatos específicos a convertir (ej: jpg_400,jpg_200,pdf_easyocr,met_metadata)
-- `--config`: Archivo de configuración personalizado
-- `--workers`: Número máximo de workers para procesamiento paralelo
+#### Configuración para Producción Web
+```yaml
+formats:
+  jpg_200:
+    enabled: true
+    quality: 85                      # Calidad optimizada para web
+    optimize: true                   # Optimización activa
+    progressive: true                # JPEG progresivo para carga rápida
+    dpi: 200                        # Resolución web estándar
 
-### Ejemplos
+  pdf_easyocr:
+    enabled: true
+    ocr_language: ["es", "en"]      # Múltiples idiomas
+    ocr_confidence: 0.3             # Confianza media para velocidad
+    create_searchable_pdf: true      # PDFs con texto buscable
+```
+
+## 🎮 Uso
+
+### Comando Básico
+
 ```bash
-# Convertir a todos los formatos configurados
-python main.py --input "imagenes/" --output "convertidas/"
+python main.py --input "ruta/entrada" --output "ruta/salida" --config config.yaml
+```
 
-# Convertir solo a JPG de alta resolución y PDF con OCR
-python main.py --input "imagenes/" --output "convertidas/" --formats jpg_400,pdf_easyocr
+### Ejemplos de Uso
 
-# Convertir solo a metadatos MET
-python main.py --input "imagenes/" --output "convertidas/" --formats met_metadata
+#### Conversión Básica
+```bash
+# Convertir archivos TIFF a múltiples formatos
+python main.py \
+  --input "C:\Documentos\TIFF" \
+  --output "C:\Documentos\Convertido" \
+  --config config.yaml
+```
 
-# Convertir a todos los formatos y generar archivos MET por formato
-python main.py --input "imagenes/" --output "convertidas/"
+#### Conversión con Configuración Personalizada
+```bash
+# Usar configuración específica
+python main.py \
+  --input "C:\Archivos\Originales" \
+  --output "C:\Archivos\Procesados" \
+  --config config_preservacion.yaml
+```
 
-# Usar configuración personalizada para archivos MET únicos por formato
-python main.py --input "imagenes/" --output "convertidas/" --config "config_met_single.yaml"
-
-# Usar configuración personalizada para archivos MET con timestamp
-python main.py --input "imagenes/" --output "convertidas/" --config "config_met_timestamp.yaml"
-
-# Usar configuración personalizada
-python main.py --input "imagenes/" --output "convertidas/" --config "mi_config.yaml"
-
-# Ver información del conversor
+#### Información del Sistema
+```bash
+# Ver formatos y conversores disponibles
 python main.py --info
 
-# Listar formatos disponibles
-python main.py --list-formats
+# Ver configuración actual
+python main.py --config config.yaml --info
 ```
 
-## Configuración
+### Parámetros de Línea de Comandos
 
-El archivo `config.yaml` permite personalizar:
+| Parámetro | Descripción | Obligatorio |
+|-----------|-------------|-------------|
+| `--input` | Directorio con archivos TIFF | ✅ |
+| `--output` | Directorio de salida | ✅ |
+| `--config` | Archivo de configuración | ❌ (usa `config.yaml` por defecto) |
+| `--info` | Mostrar información del sistema | ❌ |
 
-### Formatos de Salida
+## 📁 Estructura de Salida
 
-#### JPG 400 DPI (Alta Resolución)
-```yaml
-jpg_400:
-  enabled: true
-  quality: 95          # Calidad máxima para impresión
-  optimize: true
-  progressive: false
-  dpi: 400            # Resolución para impresión profesional
-```
-
-#### JPG 200 DPI (Resolución Media)
-```yaml
-jpg_200:
-  enabled: true
-  quality: 90          # Calidad media para web
-  optimize: true
-  progressive: false
-  dpi: 200            # Resolución para uso digital
-```
-
-#### PDF con EasyOCR
-```yaml
-pdf_easyocr:
-  enabled: true
-  resolution: 300      # Resolución en DPI
-  ocr_language: ["es", "en"]  # Lista de idiomas
-  ocr_confidence: 0.5  # Confianza (0.0-1.0)
-  use_gpu: false       # Usar GPU si está disponible
-  create_searchable_pdf: true  # PDF con texto buscable
-```
-
-#### MET Metadata (Metadatos XML)
-```yaml
-met_metadata:
-  enabled: true
-  include_image_metadata: true    # Metadatos técnicos de imagen
-  include_file_metadata: true     # Metadatos del archivo
-  include_processing_info: true   # Información de procesamiento
-  metadata_standard: 'MET'        # Estándar METS
-  organization: 'Mi Organización' # Nombre de la organización
-  creator: 'Sistema de Conversión' # Sistema creador
-  generate_all_met: true          # true: archivos con timestamp, false: un archivo por formato
-  # Nota: Si está habilitado, automáticamente genera archivos MET separados
-  # uno por cada tipo de formato convertido
-```
-
-**Opciones de `generate_all_met`:**
-- **`true`**: Genera archivos con timestamp único (ej: `MET_JPG_400_20250825_151044.xml`)
-- **`false`**: Genera un archivo por formato (ej: `jpg_400.xml`, `pdf_easyocr.xml`)
-
-### Procesamiento
-```yaml
-processing:
-  max_workers: 4       # Workers paralelos
-  batch_size: 10       # Tamaño del lote
-  overwrite_existing: false
-```
-
-### **Configuración de Archivos MET**
-
-#### **Archivos con Timestamp (por defecto)**
-```yaml
-met_metadata:
-  enabled: true
-  generate_all_met: true  # Genera: MET_JPG_400_20250825_151044.xml
-```
-
-#### **Archivos Únicos por Formato**
-```yaml
-met_metadata:
-  enabled: true
-  generate_all_met: false  # Genera: jpg_400.xml, pdf_easyocr.xml
-```
-
-#### **Archivos de Configuración Predefinidos**
-- **`config_met_timestamp.yaml`**: Para archivos con timestamp
-- **`config_met_single.yaml`**: Para archivos únicos por formato
-- **`config_met_examples.yaml`**: Ejemplos de ambas configuraciones
-
-## Estructura del Proyecto
+El sistema genera una estructura organizada automáticamente:
 
 ```
-├── main.py                 # Punto de entrada principal
-├── src/
-│   ├── __init__.py
-│   ├── converter.py        # Motor de conversión principal
-│   ├── converters/         # Módulos de conversores
-│   │   ├── __init__.py
-│   │   ├── base.py         # Clase base para conversores
-│   │   ├── jpg_resolution_converter.py  # JPG con resolución configurable
-│   │   ├── pdf_easyocr_converter.py     # PDF con EasyOCR
-│   │   └── met_metadata_converter.py    # Metadatos XML MET
-│   ├── file_processor.py   # Procesamiento de archivos
-│   └── config_manager.py   # Gestión de configuración
-├── config.yaml             # Configuración por defecto
-├── config_met_example.yaml # Configuración de ejemplo con MET
-├── config_met_examples.yaml # Configuración de ejemplo con opciones MET
-├── config_met_single.yaml # Configuración para archivos MET únicos por formato
-├── config_met_timestamp.yaml # Configuración para archivos MET con timestamp
-├── requirements.txt         # Dependencias
-├── test_converter.py       # Script de pruebas
-├── test_met_converter.py   # Script de pruebas para MET
-├── test_consolidated_met.py # Script de pruebas para MET por formato
-├── MET_CONVERTER_README.md # Documentación específica del conversor MET
-└── README.md               # Esta documentación
+directorio_salida/
+├── jpg_400/                        # JPGs de 400 DPI
+│   ├── documento1_400dpi.jpg
+│   ├── documento2_400dpi.jpg
+│   └── jpg_400.xml                # ← Metadatos consolidados
+├── jpg_200/                        # JPGs de 200 DPI
+│   ├── documento1_200dpi.jpg
+│   ├── documento2_200dpi.jpg
+│   └── jpg_200.xml                # ← Metadatos consolidados
+├── pdf_easyocr/                    # PDFs con OCR
+│   ├── documento1_EasyOCR.pdf
+│   ├── documento2_EasyOCR.pdf
+│   └── pdf_easyocr.xml            # ← Metadatos consolidados
+└── met_metadata/                   # Metadatos individuales
+    ├── documento1_MET.xml
+    └── documento2_MET.xml
 ```
 
-## 🚀 **Recomendaciones de Uso**
+### Archivos XML MET Consolidados
 
-### **Para uso personal/pequeños proyectos:**
-- **EasyOCR**: Fácil instalación, offline, buena precisión
-- **Configuración**: Habilitar solo `pdf_easyocr` en `config.yaml`
+Cada formato genera un archivo XML que incluye:
 
-### **Para desarrollo/pruebas:**
-- **EasyOCR**: Fácil instalación, buena para prototipos
-- **Configuración**: Habilitar solo `pdf_easyocr` en `config.yaml`
+- **Metadatos de archivos TIFF originales**: DPI, dimensiones, fechas, checksum
+- **Metadatos de archivos convertidos**: Tamaño, formato, ubicación
+- **Información PREMIS**: Estándar para preservación digital
+- **Trazabilidad completa**: Desde el original hasta cada formato generado
 
-## 📋 **Configuración Rápida por Caso de Uso**
+## 🔧 Características Técnicas
 
-### **Configuración de Archivos MET**
+### Procesamiento Paralelo
+- **Multi-threading**: Conversiones simultáneas para mayor velocidad
+- **Configuración flexible**: Número de workers ajustable
+- **Gestión de memoria**: Procesamiento por lotes para archivos grandes
 
-### **Caso 1: Solo JPG (sin OCR)**
-```yaml
-formats:
-  jpg_400: { enabled: true }
-  jpg_200: { enabled: true }
-  pdf_easyocr: { enabled: false }
-```
+### Validación y Calidad
+- **Validación de entrada**: Verificación de archivos TIFF válidos
+- **Control de calidad**: Parámetros ajustables para cada formato
+- **Manejo de errores**: Recuperación robusta ante fallos
 
-### **Caso 2: JPG + EasyOCR (recomendado)**
-```yaml
-formats:
-  jpg_400: { enabled: true }
-  jpg_200: { enabled: true }
-  pdf_easyocr: { enabled: true }
-```
+### Metadatos Avanzados
+- **Estándar MET**: Cumple con METS de la Library of Congress
+- **PREMIS 3.0**: Implementación completa del estándar de preservación
+- **Checksums MD5**: Verificación de integridad de archivos
+- **Información EXIF**: Metadatos de imagen y orientación
 
-### **Caso 3: Solo Metadatos MET**
-```yaml
-formats:
-  jpg_400: { enabled: false }
-  jpg_200: { enabled: false }
-  pdf_easyocr: { enabled: false }
-  met_metadata: { enabled: true }
-```
+## 📊 Casos de Uso
 
-### **Caso 4: Todos los formatos (completo)**
-```yaml
-formats:
-  jpg_400: { enabled: true }
-  jpg_200: { enabled: true }
-  pdf_easyocr: { enabled: true }
-  met_metadata: { enabled: true }
-```
+### 🏛️ Archivos y Bibliotecas
+- **Preservación Digital**: Metadatos completos para archivos históricos
+- **Catálogos**: Información estructurada para sistemas de búsqueda
+- **Compliance**: Cumplimiento de estándares institucionales
 
-### **Caso 5: Archivos MET únicos por formato**
-```yaml
-met_metadata:
-  enabled: true
-  generate_all_met: false  # Genera: jpg_400.xml, pdf_easyocr.xml
-```
+### 💼 Gestión Documental
+- **Sistemas DMS**: Integración con sistemas de gestión documental
+- **Workflows**: Trazabilidad completa del procesamiento
+- **Auditoría**: Registro detallado de conversiones
 
-### **Caso 6: Archivos MET con timestamp**
-```yaml
-met_metadata:
-  enabled: true
-  generate_all_met: true   # Genera: MET_JPG_400_20250825_151044.xml
-```
+### 🔍 Investigación y Análisis
+- **Machine Learning**: Datos estructurados para entrenamiento de IA
+- **Big Data**: Metadatos consistentes para análisis a gran escala
+- **Investigación**: Metadatos técnicos para análisis de imágenes
 
-## Agregar Nuevos Conversores
+## 🧪 Testing
 
-1. Crea una nueva clase que herede de `BaseConverter`
-2. Implementa los métodos requeridos
-3. Agrega la configuración en `config.yaml`
-4. El sistema automáticamente detectará y usará el nuevo conversor
-
-### **Documentación Adicional**
-
-- **Conversor MET**: Consulta `MET_CONVERTER_README.md` para información detallada sobre el generador de metadatos XML
-- **Ejemplos**: Revisa `examples/add_new_converter.py` para ver cómo implementar nuevos conversores
-- **Guía de desarrollador**: Consulta `DEVELOPER_GUIDE.md` para arquitectura y mejores prácticas
-
-## Pruebas
-
-Ejecuta el script de pruebas para verificar la funcionalidad:
+### Ejecutar Tests
 
 ```bash
-# Pruebas generales del sistema
+# Tests básicos
 python test_converter.py
 
-# Pruebas específicas del conversor MET
+# Tests específicos de MET
 python test_met_converter.py
 
-# Pruebas de archivos MET por formato
+# Tests consolidados
 python test_consolidated_met.py
+```
 
-# Nota: Este script prueba ambas configuraciones:
-# - Archivos MET con timestamp (generate_all_met: true)
-# - Archivos MET únicos por formato (generate_all_met: false)
+### Verificar Funcionamiento
 
-## Solución de Problemas
+```bash
+# Probar con archivos de ejemplo
+python main.py \
+  --input "test_input" \
+  --output "test_output" \
+  --config config.yaml
+```
 
-### OCR no funciona
-- **EasyOCR**: Verifica dependencias Python con `pip install easyocr`
-- **Primera ejecución**: Los modelos se descargan automáticamente (puede tardar)
+## 🔍 Troubleshooting
 
-### Errores de memoria
-- Reduce el número de workers (`--workers 2`)
-- Procesa archivos en lotes más pequeños
-- Verifica que haya suficiente RAM disponible
+### Problemas Comunes
 
-## Licencia
+1. **Error de Context Manager**:
+   ```
+   'Image' object does not support the context manager protocol
+   ```
+   **Solución**: El sistema ya está corregido, usar versión actualizada
 
-Este proyecto está bajo licencia MIT.
+2. **Archivos no van a carpetas correctas**:
+   **Solución**: Verificar que `create_subdirectories: true` esté en la configuración
 
-## 🚀 **Casos de Uso Típicos**
+3. **XMLs no se generan**:
+   **Solución**: Verificar que `postconverters.met_format.enabled: true`
 
-1. **Digitalización de documentos**: TIFF → PDF con OCR para archivos buscables
-2. **Preparación para imprenta**: TIFF → JPG 400 DPI para máxima calidad
-3. **Optimización web**: TIFF → JPG 200 DPI para sitios web
-4. **Archivo maestro**: TIFF → PDF con OCR para preservar texto
-5. **Preservación digital**: TIFF → MET XML para metadatos institucionales
-6. **Catálogos y archivos**: TIFF → MET XML para sistemas bibliotecarios
-7. **Procesamiento por lotes**: Convertir carpetas completas de documentos
-8. **OCR offline**: Usar EasyOCR para archivos confidenciales
-9. **Gestión documental**: TIFF → MET XML para sistemas DMS
-10. **Compliance institucional**: TIFF → MET XML para estándares de metadatos
-11. **Auditoría completa**: Generación automática de archivos MET separados por formato
-12. **Gestión de lotes**: Metadatos organizados por tipo de conversión
-13. **Configuración flexible**: Opción para archivos con timestamp o archivos únicos por formato
-14. **Nombres de archivos configurables**: Archivos MET con timestamp único o nombres fijos por formato
+4. **Error de permisos**:
+   **Solución**: Verificar permisos de escritura en el directorio de salida
+
+### Logs y Debug
+
+El sistema incluye logging detallado con niveles configurables:
+
+```bash
+# Ver logs detallados
+python main.py --input "entrada" --output "salida" --verbose
+```
+
+## 📚 Documentación
+
+- **[Developer Guide](DEVELOPER_GUIDE.md)**: Guía completa para desarrolladores
+- **[MET Converter README](MET_CONVERTER_README.md)**: Documentación específica de MET
+- **[Ejemplos](examples/)**: Código de ejemplo y casos de uso
+
+## 🤝 Contribuir
+
+1. **Fork** el repositorio
+2. **Crea** una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. **Commit** tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** a la rama (`git push origin feature/AmazingFeature`)
+5. **Abre** un Pull Request
+
+### Estándares de Contribución
+
+- **Python 3.8+**: Usa type hints y f-strings
+- **PEP 8**: Sigue las convenciones de estilo
+- **Tests**: Agrega tests para nuevas funcionalidades
+- **Documentación**: Actualiza README y Developer Guide
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+
+## 🙏 Agradecimientos
+
+- **Library of Congress**: Por el estándar METS
+- **PREMIS Editorial Committee**: Por el estándar PREMIS
+- **Pillow/PIL**: Por el procesamiento de imágenes
+- **EasyOCR**: Por el reconocimiento óptico de caracteres
+- **ReportLab**: Por la generación de PDFs
+
+## 📞 Soporte
+
+- **Issues**: [GitHub Issues](https://github.com/tu-usuario/conversor-tiff/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/tu-usuario/conversor-tiff/discussions)
+- **Wiki**: [Documentación del proyecto](https://github.com/tu-usuario/conversor-tiff/wiki)
+
+---
+
+**⭐ Si este proyecto te es útil, ¡déjanos una estrella en GitHub!**

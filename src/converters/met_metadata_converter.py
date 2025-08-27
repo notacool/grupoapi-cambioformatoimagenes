@@ -6,12 +6,12 @@ import hashlib
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 from PIL import Image
 
-from .base import BaseConverter
 from ..output_manager import output_manager
+from .base import BaseConverter
 
 
 class METMetadataConverter(BaseConverter):
@@ -31,11 +31,11 @@ class METMetadataConverter(BaseConverter):
         self.metadata_standard = config.get("metadata_standard", "MET")
         self.organization = config.get("organization", "Conversor TIFF")
         self.creator = config.get("creator", "Sistema Automatizado")
-        
+
         # Obtener generate_all_met de la configuración del nivel superior
         # ya que no está en formats.met_metadata sino en met_metadata
         self.generate_all_met = config.get("generate_all_met", True)
-        
+
         # Si no está en este nivel, intentar obtenerlo del config_manager
         if "generate_all_met" not in config:
             # Esto se manejará desde el conversor principal
@@ -44,7 +44,7 @@ class METMetadataConverter(BaseConverter):
     def convert(self, input_path: Path, output_path: Path) -> bool:
         """
         Convierte un archivo TIFF a archivo XML MET con metadatos
-        
+
         NOTA: Si generate_all_met=False, este método no genera archivos individuales.
         Los metadatos se generarán consolidados por formato al final del procesamiento.
 
@@ -59,12 +59,16 @@ class METMetadataConverter(BaseConverter):
             # Si generate_all_met=False, no generar archivos individuales
             # Los metadatos se generarán consolidados por formato al final
             if not self.generate_all_met:
-                output_manager.info(f"ℹ️  Metadatos MET para {input_path.name}: Se generarán consolidados por formato")
+                output_manager.info(
+                    f"ℹ️  Metadatos MET para {input_path.name}: Se generarán consolidados por formato"
+                )
                 return True
-            
+
             # Validar entrada
             if not self.validate_input(input_path):
-                output_manager.error(f"Error: Archivo de entrada inválido: {input_path}")
+                output_manager.error(
+                    f"Error: Archivo de entrada inválido: {input_path}"
+                )
                 return False
 
             # Crear directorio de salida
@@ -241,7 +245,9 @@ class METMetadataConverter(BaseConverter):
                             )
                             img_info.set("orientation", orientation_value)
                     except Exception as easyocr_error:
-                        output_manager.error(f"Error obteniendo metadatos de imagen: {str(easyocr_error)}")
+                        output_manager.error(
+                            f"Error obteniendo metadatos de imagen: {str(easyocr_error)}"
+                        )
                         pass
 
         except Exception as e:
@@ -310,7 +316,9 @@ class METMetadataConverter(BaseConverter):
             )
 
         except Exception as e:
-            output_manager.error(f"Error agregando información de procesamiento: {str(e)}")
+            output_manager.error(
+                f"Error agregando información de procesamiento: {str(e)}"
+            )
 
     def _calculate_checksum(self, file_path: Path) -> str:
         """
@@ -400,10 +408,14 @@ class METMetadataConverter(BaseConverter):
         try:
             # Mostrar modo de generación
             if self.generate_all_met:
-                output_manager.info("📋 Generando archivos MET con timestamp (uno por archivo)")
+                output_manager.info(
+                    "📋 Generando archivos MET con timestamp (uno por archivo)"
+                )
             else:
-                output_manager.info("📋 Generando archivos MET consolidados por formato")
-            
+                output_manager.info(
+                    "📋 Generando archivos MET consolidados por formato"
+                )
+
             # Agrupar archivos por formato
             files_by_format = {}
             for result in conversion_results:
@@ -445,7 +457,9 @@ class METMetadataConverter(BaseConverter):
                                 f"📋 Archivo MET consolidado para {format_type}: Generado exitosamente"
                             )
                     else:
-                        output_manager.error(f"❌ Error generando archivo MET para {format_type}")
+                        output_manager.error(
+                            f"❌ Error generando archivo MET para {format_type}"
+                        )
 
         except Exception as e:
             output_manager.error(f"Error creando archivos MET por formato: {str(e)}")
@@ -596,7 +610,9 @@ class METMetadataConverter(BaseConverter):
             return True
 
         except Exception as e:
-            output_manager.error(f"Error creando archivo MET para {format_type}: {str(e)}")
+            output_manager.error(
+                f"Error creando archivo MET para {format_type}: {str(e)}"
+            )
             return False
 
     def _create_single_format_met_file(
@@ -738,7 +754,9 @@ class METMetadataConverter(BaseConverter):
             return True
 
         except Exception as e:
-            output_manager.error(f"Error creando archivo MET único para {format_type}: {str(e)}")
+            output_manager.error(
+                f"Error creando archivo MET único para {format_type}: {str(e)}"
+            )
             return False
 
     def _get_mime_type(self, format_type: str) -> str:

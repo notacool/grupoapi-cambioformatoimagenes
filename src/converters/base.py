@@ -64,12 +64,16 @@ class BaseConverter(ABC):
         try:
             # Verificar que el archivo existe
             if not input_path.exists():
-                output_manager.error(f"Error: El archivo de entrada no existe: {input_path}")
+                output_manager.error(
+                    f"Error: El archivo de entrada no existe: {input_path}"
+                )
                 return False
 
             # Verificar que es un archivo
             if not input_path.is_file():
-                output_manager.error(f"Error: La ruta de entrada no es un archivo: {input_path}")
+                output_manager.error(
+                    f"Error: La ruta de entrada no es un archivo: {input_path}"
+                )
                 return False
 
             # Verificar que es un archivo TIFF
