@@ -4,7 +4,7 @@
 # Configuración de formatos de salida
 formats:
   # Conversor JPG 400 DPI (alta resolución)
-  jpg_400:
+  JPGHIGH:
     enabled: true                    # Habilitar conversión a JPG 400 DPI
     quality: 95                      # Calidad de compresión (1-100)
     optimize: true                   # Optimizar archivo
@@ -12,7 +12,7 @@ formats:
     dpi: 400                        # Resolución en DPI
   
   # Conversor JPG 200 DPI (media resolución)
-  jpg_200:
+  JPGLOW:
     enabled: true                    # Habilitar conversión a JPG 200 DPI
     quality: 90                      # Calidad de compresión (1-100)
     optimize: true                   # Optimizar archivo
@@ -20,7 +20,7 @@ formats:
     dpi: 200                        # Resolución en DPI
   
   # Conversor PDF con EasyOCR (alternativa local)
-  pdf_easyocr:
+  PDF:
     enabled: true                    # ✅ HABILITAR EasyOCR
     resolution: 300                  # Resolución en DPI
     page_size: "A4"                 # Tamaño de página
@@ -42,7 +42,7 @@ output:
   naming_pattern: "{original_name}"  #"{original_name}_{format}_{dpi}"  # Patrón de nombres con DPI
 
 # Configuración de metadatos MET
-met_metadata:
+METS:
   enabled: true                      # Habilitar generación de archivos MET
   include_image_metadata: true       # Incluir metadatos técnicos de imagen
   include_file_metadata: true        # Incluir metadatos del archivo
@@ -69,6 +69,6 @@ postconverters:
 # - Para agregar nuevos formatos, crear nuevas secciones siguiendo el patrón
 # - Los conversores se cargan dinámicamente desde el código
 # - Este archivo se puede especificar con --config en la línea de comandos
-# - JPG_400 y JPG_200 crean versiones de alta y media resolución respectivamente
-# - PDF_EasyOCR está habilitado como única opción de OCR
+# - JPGHIGH y JPGLOW crean versiones de alta y media resolución respectivamente
+# - PDF está habilitado como única opción de OCR
 # - Tesseract y Azure OCR están deshabilitados

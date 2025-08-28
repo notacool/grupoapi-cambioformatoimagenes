@@ -23,7 +23,7 @@ from src.output_manager import output_manager
 @click.option(
     "--formats",
     "-f",
-    help="Formatos específicos a convertir (ej: jpg_400,jpg_200,pdf_easyocr,met_metadata)",
+    help="Formatos específicos a convertir (ej: JPGHIGH,JPGLOW,PDF,METS)",
 )
 @click.option(
     "--config", "-c", "config_path", help="Archivo de configuración personalizado"
@@ -58,8 +58,8 @@ def main(
 
     Ejemplos:
         python main.py --input "imagenes/" --output "convertidas/"
-        python main.py --input "imagenes/" --output "convertidas/" --formats jpg_400,pdf_easyocr
-        python main.py --input "imagenes/" --output "convertidas/" --formats met_metadata
+        python main.py --input "imagenes/" --output "convertidas/" --formats JPGHIGH,PDF
+        python main.py --input "imagenes/" --output "convertidas/" --formats METS
         python main.py --input "imagenes/" --output "convertidas/" --config "mi_config.yaml"
     """
 
@@ -90,7 +90,7 @@ def main(
         # Procesar formatos especificados
         format_list = None
         if formats:
-            format_list = [f.strip().lower() for f in formats.split(",")]
+            format_list = [f.strip().upper() for f in formats.split(",")]
             if verbose:
                 output_manager.info(f"Formatos especificados: {format_list}")
 

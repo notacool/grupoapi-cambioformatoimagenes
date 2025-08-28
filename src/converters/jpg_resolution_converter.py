@@ -92,21 +92,16 @@ class JPGResolutionConverter(BaseConverter):
         """
         # Crear subdirectorio específico para este formato
         if self.dpi == 400:
-            format_subdir = output_dir / "jpg_400"
+            format_subdir = output_dir / "JPGHIGH"
         elif self.dpi == 200:
-            format_subdir = output_dir / "jpg_200"
+            format_subdir = output_dir / "JPGLOW"
         else:
-            format_subdir = output_dir / f"jpg_{self.dpi}"
+            format_subdir = output_dir / f"JPG{self.dpi}"
 
         format_subdir.mkdir(exist_ok=True)
 
         # Generar nombre de archivo
-        if self.dpi == 400:
-            filename = f"{input_path.stem}_400dpi.jpg"
-        elif self.dpi == 200:
-            filename = f"{input_path.stem}_200dpi.jpg"
-        else:
-            filename = f"{input_path.stem}_{self.dpi}dpi.jpg"
+        filename = f"{input_path.stem}{self.get_file_extension()}"
 
         return format_subdir / filename
 

@@ -285,12 +285,12 @@ class PDFEasyOCRConverter(BaseConverter):
             Ruta completa del archivo de salida
         """
         # Crear subdirectorio específico para este formato
-        format_subdir = output_dir / "pdf_easyocr"
+        format_subdir = output_dir / "PDF"
         format_subdir.mkdir(exist_ok=True)
 
         stem = input_path.stem
         extension = self.get_file_extension()
-        filename = f"{stem}_EasyOCR{extension}"
+        filename = f"{stem}{extension}"
         return format_subdir / filename
 
     def get_converter_info(self) -> Dict[str, Any]:

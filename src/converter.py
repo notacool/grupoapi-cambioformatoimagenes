@@ -39,28 +39,28 @@ class TIFFConverter:
         converters = {}
 
         # JPG 400 DPI Converter
-        if self.config_manager.is_format_enabled("jpg_400"):
-            jpg_400_config = self.config_manager.get_format_config("jpg_400")
-            converters["jpg_400"] = JPGResolutionConverter(jpg_400_config)
+        if self.config_manager.is_format_enabled("JPGHIGH"):
+            jpg_400_config = self.config_manager.get_format_config("JPGHIGH")
+            converters["JPGHIGH"] = JPGResolutionConverter(jpg_400_config)
 
         # JPG 200 DPI Converter
-        if self.config_manager.is_format_enabled("jpg_200"):
-            jpg_200_config = self.config_manager.get_format_config("jpg_200")
-            converters["jpg_200"] = JPGResolutionConverter(jpg_200_config)
+        if self.config_manager.is_format_enabled("JPGLOW"):
+            jpg_200_config = self.config_manager.get_format_config("JPGLOW")
+            converters["JPGLOW"] = JPGResolutionConverter(jpg_200_config)
 
         # PDF EasyOCR Converter
-        if self.config_manager.is_format_enabled("pdf_easyocr"):
-            pdf_easyocr_config = self.config_manager.get_format_config("pdf_easyocr")
-            converters["pdf_easyocr"] = PDFEasyOCRConverter(pdf_easyocr_config)
+        if self.config_manager.is_format_enabled("PDF"):
+            pdf_easyocr_config = self.config_manager.get_format_config("PDF")
+            converters["PDF"] = PDFEasyOCRConverter(pdf_easyocr_config)
 
         # MET Metadata Converter
-        if self.config_manager.is_format_enabled("met_metadata"):
-            met_metadata_config = self.config_manager.get_format_config("met_metadata")
+        if self.config_manager.is_format_enabled("METS"):
+            met_metadata_config = self.config_manager.get_format_config("METS")
             # Agregar configuración del nivel superior para MET
             met_metadata_config.update(
-                self.config_manager.config.get("met_metadata", {})
+                self.config_manager.config.get("METS", {})
             )
-            converters["met_metadata"] = METMetadataConverter(met_metadata_config)
+            converters["METS"] = METMetadataConverter(met_metadata_config)
 
         output_manager.info(f"Conversores inicializados: {list(converters.keys())}")
         return converters
@@ -282,8 +282,8 @@ class TIFFConverter:
 
             # Generar archivos MET por formato si está habilitado
             met_metadata_enabled = self.config_manager.is_format_enabled(
-                "met_metadata"
-            ) or self.config_manager.config.get("met_metadata", {}).get(
+                "METS"
+            ) or self.config_manager.config.get("METS", {}).get(
                 "enabled", False
             )
             if met_metadata_enabled:
@@ -334,15 +334,15 @@ class TIFFConverter:
             )
 
             # Información específica de los formatos
-            if "jpg_400" in result["formats_processed"]:
+            if "JPGHIGH" in result["formats_processed"]:
                 output_manager.info("🖼️  JPG 400 DPI: Alta resolución para impresión")
-            if "jpg_200" in result["formats_processed"]:
+            if "JPGLOW" in result["formats_processed"]:
                 output_manager.info("🖼️  JPG 200 DPI: Resolución media para web")
-            if "pdf_easyocr" in result["formats_processed"]:
+            if "PDF" in result["formats_processed"]:
                 output_manager.info(
                     "📄 PDF con EasyOCR: Texto buscable y seleccionable"
                 )
-            if "met_metadata" in result["formats_processed"]:
+            if "METS" in result["formats_processed"]:
                 output_manager.info(
                     "📋 MET Metadata: Archivos XML con metadatos detallados"
                 )

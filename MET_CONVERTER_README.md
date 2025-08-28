@@ -4,6 +4,8 @@
 
 El **Conversor MET Metadata** es un nuevo módulo del sistema de conversión TIFF que genera archivos XML siguiendo el estándar **MET (Metadata Encoding and Transmission Standard)** de la Library of Congress. Este conversor crea metadatos detallados y estructurados para cada archivo TIFF procesado.
 
+**Nueva Funcionalidad**: El sistema ahora también genera un **archivo METS del TIFF original** que documenta completamente el archivo fuente antes de la conversión, proporcionando trazabilidad completa desde el original hasta cada formato generado.
+
 ## 🔧 Características Principales
 
 ### ✨ Generación de Metadatos Completos
@@ -46,15 +48,44 @@ El **Conversor MET Metadata** es un nuevo módulo del sistema de conversión TIF
 ### Directorio de Salida
 ```
 output_directory/
-└── met_metadata/
-    ├── archivo1_MET.xml
-    ├── archivo2_MET.xml
-    └── archivo3_MET.xml
+├── METS/                           # Archivo METS del TIFF original
+│   └── TIFF.xml                   # ← Documentación completa del archivo fuente
+├── met_metadata/                   # Metadatos individuales por archivo
+│   ├── archivo1_MET.xml
+│   ├── archivo2_MET.xml
+│   └── archivo3_MET.xml
+├── JPGHIGH/                        # JPGs de 400 DPI + metadatos consolidados
+│   ├── archivo1_400dpi.jpg
+│   └── JPGHIGH.xml                # ← Metadatos consolidados del formato
+├── JPGLOW/                         # JPGs de 200 DPI + metadatos consolidados
+│   ├── archivo1_200dpi.jpg
+│   └── JPGLOW.xml                 # ← Metadatos consolidados del formato
+└── PDF/                            # PDFs con OCR + metadatos consolidados
+    ├── archivo1_EasyOCR.pdf
+    └── PDF.xml                     # ← Metadatos consolidados del formato
 ```
 
+### Tipos de Archivos XML Generados
+
+#### 1. Archivo METS del TIFF Original (`TIFF.xml`)
+- **Propósito**: Documentación completa del archivo fuente antes de la conversión
+- **Contenido**: Metadatos técnicos, administrativos y de preservación del TIFF original
+- **Ubicación**: `output_directory/METS/TIFF.xml`
+
+#### 2. Metadatos Individuales (`{archivo}_MET.xml`)
+- **Propósito**: Metadatos específicos de cada archivo TIFF procesado
+- **Contenido**: Información detallada del archivo individual
+- **Ubicación**: `output_directory/met_metadata/{archivo}_MET.xml`
+
+#### 3. Metadatos Consolidados por Formato (`{formato}.xml`)
+- **Propósito**: Metadatos consolidados que incluyen el TIFF original y los archivos convertidos
+- **Contenido**: Trazabilidad completa desde el original hasta cada formato generado
+- **Ubicación**: `output_directory/{formato}/{formato}.xml`
+
 ### Formato de Nombres
-- **Patrón**: `{nombre_original}_MET.xml`
-- **Ejemplo**: `documento_2024_MET.xml`
+- **Metadatos individuales**: `{nombre_original}_MET.xml`
+- **Metadatos consolidados**: `{formato}.xml` (ej: `JPGHIGH.xml`)
+- **METS del TIFF original**: `TIFF.xml`
 
 ## ⚙️ Configuración
 

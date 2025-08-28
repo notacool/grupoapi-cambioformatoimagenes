@@ -62,7 +62,7 @@ class FileProcessor:
 
             if create_subdirs:
                 # Crear subdirectorios para cada formato
-                subdirs = ["jpg_400", "jpg_200", "pdf_easyocr", "met_metadata"]
+                subdirs = ["JPGHIGH", "JPGLOW", "PDF", "METS"]
 
                 for subdir in subdirs:
                     subdir_path = self.output_dir / subdir
@@ -96,13 +96,13 @@ class FileProcessor:
 
             # Generar nombre de archivo
             if format_name == "jpg_400":
-                filename = f"{input_file.stem}_400dpi.jpg"
+                filename = f"{input_file.stem}.jpg"
             elif format_name == "jpg_200":
-                filename = f"{input_file.stem}_200dpi.jpg"
+                filename = f"{input_file.stem}.jpg"
             elif format_name == "pdf_easyocr":
-                filename = f"{input_file.stem}_EasyOCR.pdf"
+                filename = f"{input_file.stem}.pdf"
             elif format_name == "met_metadata":
-                filename = f"{input_file.stem}_MET.xml"
+                filename = f"{input_file.stem}.xml"
             else:
                 filename = (
                     f"{input_file.stem}_{format_name}{self._get_extension(format_name)}"

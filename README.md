@@ -18,10 +18,11 @@ El **Conversor TIFF** es un sistema avanzado de conversión de archivos TIFF que
 
 ### 📊 **Postconversores Avanzados**
 - **MET Format PostConverter**: Genera XMLs consolidados por formato que incluyen:
+  - **Archivo METS del TIFF original**: Documentación completa del archivo fuente
   - Metadatos completos de archivos TIFF originales
   - Información de archivos convertidos
   - Estructura PREMIS para preservación digital
-  - Organización automática en carpetas por formato
+  - Organización automática en carpetas por formato (JPGHIGH, JPGLOW, PDF, METS)
 
 ### 🗂️ **Organización Inteligente**
 - **Estructura automática de carpetas**: Cada formato se organiza en su subdirectorio
@@ -208,18 +209,20 @@ El sistema genera una estructura organizada automáticamente:
 
 ```
 directorio_salida/
-├── jpg_400/                        # JPGs de 400 DPI
+├── METS/                           # Archivo METS del TIFF original
+│   └── TIFF.xml                   # ← Documentación completa del archivo fuente
+├── JPGHIGH/                        # JPGs de 400 DPI
 │   ├── documento1_400dpi.jpg
 │   ├── documento2_400dpi.jpg
-│   └── jpg_400.xml                # ← Metadatos consolidados
-├── jpg_200/                        # JPGs de 200 DPI
+│   └── JPGHIGH.xml                # ← Metadatos consolidados
+├── JPGLOW/                         # JPGs de 200 DPI
 │   ├── documento1_200dpi.jpg
 │   ├── documento2_200dpi.jpg
-│   └── jpg_200.xml                # ← Metadatos consolidados
-├── pdf_easyocr/                    # PDFs con OCR
+│   └── JPGLOW.xml                 # ← Metadatos consolidados
+├── PDF/                            # PDFs con OCR
 │   ├── documento1_EasyOCR.pdf
 │   ├── documento2_EasyOCR.pdf
-│   └── pdf_easyocr.xml            # ← Metadatos consolidados
+│   └── PDF.xml                    # ← Metadatos consolidados
 └── met_metadata/                   # Metadatos individuales
     ├── documento1_MET.xml
     └── documento2_MET.xml
@@ -227,8 +230,14 @@ directorio_salida/
 
 ### Archivos XML MET Consolidados
 
-Cada formato genera un archivo XML que incluye:
+El sistema genera dos tipos de archivos XML:
 
+#### Archivo METS del TIFF Original (`TIFF.xml`)
+- **Documentación completa del archivo fuente**: Metadatos técnicos y administrativos
+- **Información de preservación**: Estructura PREMIS para archivos originales
+- **Trazabilidad**: Registro completo del archivo TIFF antes de la conversión
+
+#### Archivos MET por Formato (ej: `JPGHIGH.xml`)
 - **Metadatos de archivos TIFF originales**: DPI, dimensiones, fechas, checksum
 - **Metadatos de archivos convertidos**: Tamaño, formato, ubicación
 - **Información PREMIS**: Estándar para preservación digital
