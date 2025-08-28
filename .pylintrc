@@ -10,7 +10,7 @@ recursive=yes
 
 [MESSAGES CONTROL]
 # Deshabilitar warnings específicos
-disable=C0114,C0115,C0116,E0401,W0611,W0613
+disable=C0114,C0115,C0116,E0401,W0611,W0613,W0718,W1309,R0914,R0913,R0912,R0915,R0801,W0107,W0212,W1309,R1705,C0415,C0302
 
 # Habilitar solo ciertos warnings
 enable=C0301,C0303

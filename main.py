@@ -112,9 +112,7 @@ def main(
             )
 
         # Ejecutar conversión
-        output_manager.info(
-            "\nIniciando conversión de archivos TIFF por subcarpeta..."
-        )
+        output_manager.info("\nIniciando conversión de archivos TIFF por subcarpeta...")
         result = converter.convert_directory(
             input_dir=input_dir,
             output_dir=output_dir,

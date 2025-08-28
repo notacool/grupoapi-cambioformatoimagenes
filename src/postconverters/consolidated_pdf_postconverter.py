@@ -340,9 +340,7 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
             temp_pdf_path = output_dir / temp_pdf_name
 
             # Usar el conversor PDF existente
-            success = self.pdf_converter.convert(
-                tiff_file, temp_pdf_path
-            )
+            success = self.pdf_converter.convert(tiff_file, temp_pdf_path)
 
             if success and temp_pdf_path.exists():
                 return temp_pdf_path
@@ -350,9 +348,7 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
                 return None
 
         except Exception as e:
-            output_manager.error(
-                f"Error convirtiendo {tiff_file.name} a PDF: {str(e)}"
-            )
+            output_manager.error(f"Error convirtiendo {tiff_file.name} a PDF: {str(e)}")
             return None
 
     def _merge_pdfs(self, pdf_files: List[Path], output_file: Path) -> bool:
