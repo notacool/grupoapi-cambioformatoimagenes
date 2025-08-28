@@ -131,6 +131,7 @@ dmypy.json
 # Archivos específicos del proyecto
 test_output/
 test_input/
+test_outputs/
 *.temp.pdf
 *.tiff
 *.jpg
@@ -143,3 +144,53 @@ create_test_*.py
 
 # Archivos temporales de EasyOCR
 .EasyOCR/
+
+# Directorios de salida del procesamiento
+output/
+converted/
+processed/
+
+# Archivos de log del sistema
+logs/
+*.log
+
+# Archivos de metadatos METS generados
+*.xml
+
+# Archivos temporales del sistema
+temp/
+tmp/
+.tmp/
+
+# Archivos de caché del sistema
+.cache/
+cache/
+
+# Archivos de configuración local
+config_local.yaml
+.env.local
+
+# Archivos de respaldo
+*.bak
+*.backup
+*~
+
+# Archivos de sistema Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Archivos de sistema macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Archivos de sistema Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*

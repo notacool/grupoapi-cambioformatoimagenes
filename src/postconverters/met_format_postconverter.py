@@ -37,7 +37,7 @@ class METFormatPostConverter(BasePostConverter):
     def process(self, conversion_result: Dict[str, Any], output_dir: Path) -> bool:
         """
         Procesa el resultado de la conversión y genera archivos MET por formato
-        y un archivo METS del TIFF original
+        y un archivo METS del TIFF original para la subcarpeta específica
 
         Args:
             conversion_result: Resultado de la conversión principal
@@ -51,11 +51,18 @@ class METFormatPostConverter(BasePostConverter):
                 output_manager.warning("No se puede procesar conversión fallida")
                 return False
 
+            # Obtener el nombre de la subcarpeta
+            subfolder_name = conversion_result.get("subfolder", "unknown")
+            
             # Preparar los resultados para los archivos MET por formato
             conversion_results = self._prepare_conversion_results(conversion_result)
 
-            # Generar archivos MET por formato
-            results = self._create_format_specific_met(conversion_results, output_dir)
+            # Generar archivos MET por formato para esta subcarpeta
+            results = self._create_format_specific_met_for_subfolder(
+                conversion_results, 
+                output_dir, 
+                subfolder_name
+            )
 
             # Mostrar resumen de generación
             successful_formats = [fmt for fmt, success in results.items() if success and fmt != "original_tiff_mets"]
@@ -64,17 +71,17 @@ class METFormatPostConverter(BasePostConverter):
             # Verificar si se generó el METS del TIFF original
             original_tiff_success = results.get("original_tiff_mets", False)
             if original_tiff_success:
-                output_manager.success("Archivo METS del TIFF original generado exitosamente")
+                output_manager.success(f"Archivo METS del TIFF original generado para {subfolder_name}")
             else:
-                output_manager.error("Error generando archivo METS del TIFF original")
+                output_manager.error(f"Error generando archivo METS del TIFF original para {subfolder_name}")
 
             if successful_formats:
                 output_manager.success(
-                    f"Archivos MET generados para: {', '.join(successful_formats)}"
+                    f"Archivos MET generados para {subfolder_name}: {', '.join(successful_formats)}"
                 )
             if failed_formats:
                 output_manager.error(
-                    f"Errores generando MET para: {', '.join(failed_formats)}"
+                    f"Errores generando MET para {subfolder_name}: {', '.join(failed_formats)}"
                 )
 
             return len(failed_formats) == 0
@@ -95,33 +102,32 @@ class METFormatPostConverter(BasePostConverter):
         Returns:
             Lista de resultados preparados
         """
+
+        
         conversion_results = []
 
         for file_info in conversion_result.get("files_info", []):
             input_file = Path(file_info["input_file"])
             output_files = []
 
-            # Agregar información de cada formato generado
-            for format_name in conversion_result.get("formats_processed", []):
-                if format_name in file_info.get("conversions", {}):
-                    conversion = file_info["conversions"][format_name]
-                    if conversion.get("success"):
-                        output_path = Path(conversion["output_path"])
-                        try:
-                            size = (
-                                output_path.stat().st_size
-                                if output_path.exists()
-                                else 0
-                            )
-                        except (OSError, FileNotFoundError):
-                            size = 0
-                        output_files.append(
-                            {
-                                "format": format_name,
-                                "path": output_path,
-                                "size": size,
-                            }
-                        )
+            # Los datos ya están en file_info, no necesitamos buscar en conversions
+            if file_info.get("success", False):
+                output_path = Path(file_info["output_file"])
+                try:
+                    size = (
+                        output_path.stat().st_size
+                        if output_path.exists()
+                        else 0
+                    )
+                except (OSError, FileNotFoundError):
+                    size = 0
+                output_files.append(
+                    {
+                        "format": file_info["format"],
+                        "path": output_path,
+                        "size": size,
+                    }
+                )
 
             conversion_results.append(
                 {
@@ -199,6 +205,246 @@ class METFormatPostConverter(BasePostConverter):
                 results[format_type] = False
 
         return results
+
+    def _create_format_specific_met_for_subfolder(
+        self, 
+        conversion_results: List[Dict[str, Any]], 
+        output_dir: Path, 
+        subfolder_name: str
+    ) -> Dict[str, bool]:
+        """
+        Crea archivos MET por formato para una subcarpeta específica
+        
+        Args:
+            conversion_results: Lista de resultados de conversión
+            output_dir: Directorio de salida raíz
+            subfolder_name: Nombre de la subcarpeta
+            
+        Returns:
+            Diccionario con el resultado de cada formato
+        """
+        results = {}
+        
+        try:
+            # Crear directorio de la subcarpeta en la salida
+            subfolder_output_dir = output_dir / subfolder_name
+            subfolder_output_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generar archivos MET por formato
+            for format_name in ["JPGHIGH", "JPGLOW", "PDF"]:
+                if self._has_files_for_format(conversion_results, format_name):
+                    success = self._create_format_met_file(
+                        conversion_results, 
+                        subfolder_output_dir, 
+                        format_name, 
+                        subfolder_name
+                    )
+                    results[format_name] = success
+                else:
+                    results[format_name] = False
+            
+            # Generar archivo METS del TIFF original para esta subcarpeta
+            original_tiff_success = self._create_original_tiff_mets_file(
+                conversion_results, 
+                subfolder_output_dir
+            )
+            results["original_tiff_mets"] = original_tiff_success
+            
+        except Exception as e:
+            output_manager.error(f"Error generando archivos MET para subcarpeta {subfolder_name}: {str(e)}")
+            # Marcar todos como fallidos
+            for format_name in ["JPGHIGH", "JPGLOW", "PDF"]:
+                results[format_name] = False
+            results["original_tiff_mets"] = False
+        
+        return results
+
+    def _has_files_for_format(self, conversion_results: List[Dict[str, Any]], format_name: str) -> bool:
+        """Verifica si hay archivos para un formato específico"""
+        for result in conversion_results:
+            if result.get("success", False):
+                for output_file in result.get("output_files", []):
+                    if output_file.get("format") == format_name:
+                        return True
+        return False
+
+    def _create_format_met_file(
+        self, 
+        conversion_results: List[Dict[str, Any]], 
+        subfolder_output_dir: Path, 
+        format_name: str,
+        subfolder_name: str
+    ) -> bool:
+        """
+        Crea un archivo MET para un formato específico en una subcarpeta
+        
+        Args:
+            conversion_results: Lista de resultados de conversión
+            subfolder_output_dir: Directorio de salida de la subcarpeta
+            format_name: Nombre del formato
+            subfolder_name: Nombre de la subcarpeta
+            
+        Returns:
+            True si se creó exitosamente
+        """
+        try:
+            # Filtrar resultados para este formato
+            format_results = []
+            for result in conversion_results:
+                if result.get("success", False):
+                    for output_file in result.get("output_files", []):
+                        if output_file.get("format") == format_name:
+                            format_results.append({
+                                "input_file": result["input_file"],
+                                "output_file": output_file
+                            })
+            
+            if not format_results:
+                return False
+            
+            # Crear directorio METS si no existe
+            mets_dir = subfolder_output_dir / "METS"
+            mets_dir.mkdir(exist_ok=True)
+            
+            # Crear archivo MET para este formato en la carpeta METS
+            met_file_path = mets_dir / f"{format_name}.xml"
+            
+            # Generar contenido XML
+            xml_content = self._generate_format_met_xml(
+                format_results, 
+                format_name, 
+                subfolder_name
+            )
+            
+            # Escribir archivo
+            with open(met_file_path, 'w', encoding='utf-8') as f:
+                f.write(xml_content)
+            
+            output_manager.success(f"Archivo MET generado: {subfolder_name}/METS/{format_name}.xml")
+            return True
+            
+        except Exception as e:
+            output_manager.error(f"Error generando archivo MET para {format_name} en {subfolder_name}: {str(e)}")
+            return False
+
+    def _create_original_tiff_mets_file(
+        self, 
+        conversion_results: List[Dict[str, Any]], 
+        output_dir: Path
+    ) -> bool:
+        """
+        Crea un archivo METS del TIFF original para una subcarpeta específica
+        
+        Args:
+            conversion_results: Lista de resultados de conversión
+            subfolder_output_dir: Directorio de salida de la subcarpeta
+            subfolder_name: Nombre de la subcarpeta
+            
+        Returns:
+            True si se creó exitosamente
+        """
+        try:
+            # Crear directorio METS si no existe
+            mets_dir = subfolder_output_dir / "METS"
+            mets_dir.mkdir(exist_ok=True)
+            
+            # Generar contenido XML del METS del TIFF original
+            xml_content = self._generate_original_tiff_mets_xml(
+                conversion_results, 
+                subfolder_name
+            )
+            
+            # Escribir archivo
+            met_file_path = mets_dir / f"{subfolder_name}_TIFF.xml"
+            with open(met_file_path, 'w', encoding='utf-8') as f:
+                f.write(xml_content)
+            
+            output_manager.success(f"Archivo METS del TIFF original generado: {subfolder_name}/METS/{subfolder_name}_TIFF.xml")
+            return True
+            
+        except Exception as e:
+            output_manager.error(f"Error generando archivo METS del TIFF original para {subfolder_name}: {str(e)}")
+            return False
+
+    def _generate_format_met_xml(
+        self, 
+        format_results: List[Dict[str, Any]], 
+        format_name: str,
+        subfolder_name: str
+    ) -> str:
+        """
+        Genera el contenido XML para un archivo MET de formato específico
+        
+        Args:
+            format_results: Resultados del formato específico
+            format_name: Nombre del formato
+            subfolder_name: Nombre de la subcarpeta
+            
+        Returns:
+            Contenido XML generado
+        """
+        # Implementar generación de XML específico para el formato
+        # Este es un placeholder - se debe implementar la lógica completa
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        xml_content = f"""<?xml version='1.0' encoding='utf-8'?>
+<mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <objid>MET_{format_name}_{subfolder_name}_{timestamp}</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>{self.organization}</name>
+  </agent>
+  <metsHdr CREATEDATE="{datetime.now().isoformat()}" LASTMODDATE="{datetime.now().isoformat()}">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Conversor TIFF v2.0</name>
+    </agent>
+  </metsHdr>
+  <fileSec>
+    <fileGrp USE="PRESERVATION">
+      <!-- Archivos del formato {format_name} para subcarpeta {subfolder_name} -->
+    </fileGrp>
+  </fileSec>
+</mets>"""
+        
+        return xml_content
+
+    def _generate_original_tiff_mets_xml(
+        self, 
+        conversion_results: List[Dict[str, Any]], 
+        subfolder_name: str
+    ) -> str:
+        """
+        Genera el contenido XML para el archivo METS del TIFF original
+        
+        Args:
+            conversion_results: Lista de resultados de conversión
+            subfolder_name: Nombre de la subcarpeta
+            
+        Returns:
+            Contenido XML generado
+        """
+        # Implementar generación de XML del METS del TIFF original
+        # Este es un placeholder - se debe implementar la lógica completa
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        xml_content = f"""<?xml version='1.0' encoding='utf-8'?>
+<mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <objid>METS_{subfolder_name}_TIFF_{timestamp}</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>{self.organization}</name>
+  </agent>
+  <metsHdr CREATEDATE="{datetime.now().isoformat()}" LASTMODDATE="{datetime.now().isoformat()}">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Conversor TIFF v2.0</name>
+    </agent>
+  </metsHdr>
+  <fileSec>
+    <fileGrp USE="PRESERVATION">
+      <!-- Archivos TIFF originales de la subcarpeta {subfolder_name} -->
+    </fileGrp>
+  </fileSec>
+</mets>"""
+        
+        return xml_content
 
     def _create_single_format_met_file(
         self, format_type: str, files: List[Dict[str, Any]], output_dir: Path

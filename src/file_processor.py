@@ -4,7 +4,7 @@ Procesador de archivos para el conversor TIFF
 
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Tuple
 
 from .output_manager import output_manager
 
@@ -17,168 +17,188 @@ class FileProcessor:
         Inicializa el procesador de archivos
 
         Args:
-            input_dir: Directorio de entrada
-            output_dir: Directorio de salida
+            input_dir: Directorio de entrada raíz
+            output_dir: Directorio de salida raíz
         """
         self.input_dir = Path(input_dir)
         self.output_dir = Path(output_dir)
-        self._tiff_files = None  # Lazy loading
+        self._tiff_folders = None  # Lazy loading
+        self._conversion_results = {}  # Resultados por subcarpeta
 
-    def _get_tiff_files(self) -> List[Path]:
-        """Obtiene la lista de archivos TIFF del directorio de entrada"""
+    def find_tiff_folders(self) -> Dict[str, Path]:
+        """
+        Busca recursivamente carpetas TIFF en el directorio de entrada
+        
+        Returns:
+            Diccionario con {nombre_subcarpeta: ruta_carpeta_tiff}
+        """
+        tiff_folders = {}
+        
+        if not self.input_dir.exists() or not self.input_dir.is_dir():
+            return tiff_folders
+        
+        # Buscar recursivamente en todas las subcarpetas
+        for item in self.input_dir.rglob("*"):
+            if item.is_dir() and item.name.upper() == "TIFF":
+                # Obtener el nombre de la subcarpeta padre
+                subfolder_name = item.parent.name
+                tiff_folders[subfolder_name] = item
+                output_manager.info(f"📁 Carpeta TIFF encontrada en: {subfolder_name}/TIFF/")
+        
+        return tiff_folders
+
+    def get_tiff_folders(self) -> Dict[str, Path]:
+        """Retorna las carpetas TIFF encontradas (lazy loading)"""
+        if self._tiff_folders is None:
+            self._tiff_folders = self.find_tiff_folders()
+        return self._tiff_folders
+
+    def get_tiff_files_from_folder(self, tiff_folder: Path) -> List[Path]:
+        """
+        Obtiene la lista de archivos TIFF de una carpeta específica
+        
+        Args:
+            tiff_folder: Ruta a la carpeta TIFF
+            
+        Returns:
+            Lista de archivos TIFF encontrados
+        """
         tiff_files = []
-        if self.input_dir.exists() and self.input_dir.is_dir():
-            for file_path in self.input_dir.iterdir():
-                if file_path.is_file() and file_path.suffix.lower() in [
-                    ".tif",
-                    ".tiff",
-                ]:
+        if tiff_folder.exists() and tiff_folder.is_dir():
+            for file_path in tiff_folder.iterdir():
+                if file_path.is_file() and file_path.suffix.lower() in [".tif", ".tiff"]:
                     tiff_files.append(file_path)
-
-        output_manager.info(
-            f"Encontrados {len(tiff_files)} archivos TIFF en: {self.input_dir}"
-        )
+        
         return tiff_files
 
-    def get_tiff_files(self) -> List[Path]:
-        """Retorna la lista de archivos TIFF"""
-        if self._tiff_files is None:
-            self._tiff_files = self._get_tiff_files()
-        return self._tiff_files
-
-    def create_output_structure(self, create_subdirs: bool = True) -> bool:
+    def create_output_structure_for_subfolder(self, subfolder_name: str, enabled_formats: List[str]) -> bool:
         """
-        Crea la estructura de directorios de salida
-
+        Crea la estructura de directorios de salida para una subcarpeta específica
+        
         Args:
-            create_subdirs: Si crear subdirectorios por formato
-
+            subfolder_name: Nombre de la subcarpeta
+            enabled_formats: Lista de formatos habilitados
+            
         Returns:
             True si se creó correctamente
         """
         try:
-            # Crear directorio principal de salida
-            self.output_dir.mkdir(parents=True, exist_ok=True)
-
-            if create_subdirs:
-                # Crear subdirectorios para cada formato
-                subdirs = ["JPGHIGH", "JPGLOW", "PDF", "METS"]
-
-                for subdir in subdirs:
-                    subdir_path = self.output_dir / subdir
-                    subdir_path.mkdir(exist_ok=True)
-
-            output_manager.info(f"Estructura de salida creada en: {self.output_dir}")
+            # Crear directorio de la subcarpeta en la salida
+            subfolder_output_dir = self.output_dir / subfolder_name
+            subfolder_output_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Crear subdirectorios solo para los formatos habilitados
+            for format_name in enabled_formats:
+                format_dir = subfolder_output_dir / format_name
+                format_dir.mkdir(exist_ok=True)
+            
+            output_manager.info(f"📂 Estructura creada para {subfolder_name}: {', '.join(enabled_formats)}")
             return True
-
+            
         except Exception as e:
-            output_manager.error(f"Error creando estructura de salida: {str(e)}")
+            output_manager.error(f"❌ Error creando estructura para {subfolder_name}: {str(e)}")
             return False
 
-    def get_output_path(
-        self, input_file: Path, format_name: str, create_subdirs: bool = True
+    def get_output_path_for_subfolder(
+        self, 
+        input_file: Path, 
+        format_name: str, 
+        subfolder_name: str
     ) -> Path:
         """
-        Genera la ruta de salida para un archivo
-
+        Genera la ruta de salida para un archivo en una subcarpeta específica
+        
         Args:
             input_file: Archivo de entrada
             format_name: Nombre del formato de salida
-            create_subdirs: Si crear subdirectorios
-
+            subfolder_name: Nombre de la subcarpeta
+            
         Returns:
             Ruta de salida generada
         """
-        if create_subdirs:
-            # Crear subdirectorio para el formato
-            format_dir = self.output_dir / format_name
-            format_dir.mkdir(exist_ok=True)
+        # Crear estructura: output_dir/subfolder_name/format_name/
+        format_dir = self.output_dir / subfolder_name / format_name
+        format_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Mantener nombre original del archivo
+        stem = input_file.stem
+        extension = self._get_extension_for_format(format_name)
+        filename = f"{stem}{extension}"
+        
+        return format_dir / filename
 
-            # Generar nombre de archivo
-            if format_name == "jpg_400":
-                filename = f"{input_file.stem}.jpg"
-            elif format_name == "jpg_200":
-                filename = f"{input_file.stem}.jpg"
-            elif format_name == "pdf_easyocr":
-                filename = f"{input_file.stem}.pdf"
-            elif format_name == "met_metadata":
-                filename = f"{input_file.stem}.xml"
-            else:
-                filename = (
-                    f"{input_file.stem}_{format_name}{self._get_extension(format_name)}"
-                )
-
-            return format_dir / filename
-
-        # Sin subdirectorios
-        return (
-            self.output_dir
-            / f"{input_file.stem}_{format_name}{self._get_extension(format_name)}"
-        )
-
-    def _get_extension(self, format_name: str) -> str:
-        """Retorna la extensión para un formato"""
+    def _get_extension_for_format(self, format_name: str) -> str:
+        """Retorna la extensión para un formato específico"""
         extensions = {
-            "jpg_400": ".jpg",
-            "jpg_200": ".jpg",
-            "pdf_easyocr": ".pdf",
-            "met_metadata": ".xml",
+            "JPGHIGH": ".jpg",
+            "JPGLOW": ".jpg", 
+            "PDF": ".pdf",
+            "METS": ".xml"
         }
-        return extensions.get(format_name, "")
+        return extensions.get(format_name, ".unknown")
 
     def validate_output_path(self, output_path: Path, overwrite: bool = False) -> bool:
         """
         Valida si se puede escribir en la ruta de salida
-
+        
         Args:
             output_path: Ruta de salida a validar
             overwrite: Si sobrescribir archivos existentes
-
+            
         Returns:
-            True si se puede escribir
+            True si la ruta es válida
         """
         try:
-            output_dir = output_path.parent
-
-            # Verificar si el directorio existe
-            if not output_dir.exists():
-                output_dir.mkdir(parents=True, exist_ok=True)
-
-            # Verificar si el archivo ya existe
-            if output_path.exists():
-                if overwrite:
-                    output_manager.info(
-                        f"Sobrescribiendo archivo existente: {output_path.name}"
-                    )
-                    return True
-
-                output_manager.info(f"Archivo ya existe (omitir): {output_path.name}")
+            # Crear directorio padre si no existe
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Verificar si el archivo existe y si se puede sobrescribir
+            if output_path.exists() and not overwrite:
+                output_manager.warning(f"⚠️  Archivo existente (no sobrescrito): {output_path.name}")
                 return False
-
-            # Verificar permisos de escritura
-            if not os.access(output_dir, os.W_OK):
-                output_manager.error(f"Sin permisos de escritura en: {output_dir}")
-                return False
-
+                
             return True
-
+            
         except Exception as e:
-            output_manager.error(f"Error validando ruta de salida: {str(e)}")
+            output_manager.error(f"❌ Error validando ruta de salida: {str(e)}")
             return False
 
-    def cleanup_empty_directories(self) -> None:
-        """Limpia directorios vacíos en el directorio de salida"""
-        try:
-            for item in self.output_dir.iterdir():
-                if item.is_dir():
-                    # Verificar si el directorio está vacío
-                    if not any(item.iterdir()):
-                        try:
-                            item.rmdir()
-                            output_manager.info(f"Directorio vacío eliminado: {item}")
-                        except OSError as e:
-                            output_manager.warning(
-                                f"No se pudo eliminar directorio: {item} - {str(e)}"
-                            )
-        except Exception as e:
-            output_manager.error(f"Error limpiando directorios vacíos: {str(e)}")
+    def add_conversion_result(self, subfolder_name: str, file_info: Dict) -> None:
+        """
+        Agrega un resultado de conversión para una subcarpeta
+        
+        Args:
+            subfolder_name: Nombre de la subcarpeta
+            file_info: Información del archivo convertido
+        """
+        if subfolder_name not in self._conversion_results:
+            self._conversion_results[subfolder_name] = []
+        
+        self._conversion_results[subfolder_name].append(file_info)
+
+    def get_conversion_results(self) -> Dict[str, List[Dict]]:
+        """Retorna todos los resultados de conversión organizados por subcarpeta"""
+        return self._conversion_results
+
+    def get_summary_by_subfolder(self) -> Dict[str, Dict]:
+        """
+        Genera un resumen de conversiones por subcarpeta
+        
+        Returns:
+            Diccionario con resumen por subcarpeta
+        """
+        summary = {}
+        
+        for subfolder_name, results in self._conversion_results.items():
+            total_files = len(results)
+            successful = len([r for r in results if r.get("success", False)])
+            failed = total_files - successful
+            
+            summary[subfolder_name] = {
+                "total_files": total_files,
+                "successful": successful,
+                "failed": failed,
+                "formats_processed": list(set(r.get("format") for r in results))
+            }
+        
+        return summary

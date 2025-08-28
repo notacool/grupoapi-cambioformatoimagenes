@@ -15,7 +15,7 @@ from src.output_manager import output_manager
 
 @click.command()
 @click.option(
-    "--input", "-i", "input_dir", help="Directorio de entrada con archivos TIFF"
+    "--input", "-i", "input_dir", help="Directorio de entrada raíz con subcarpetas que contengan carpetas TIFF"
 )
 @click.option(
     "--output", "-o", "output_dir", help="Directorio de salida para las conversiones"
@@ -39,7 +39,7 @@ from src.output_manager import output_manager
     "--list-formats", is_flag=True, help="Listar formatos disponibles y salir"
 )
 @click.option("--info", is_flag=True, help="Mostrar información del conversor y salir")
-@click.option("--verbose", "-v", is_flag=True, help="Modo verbose con más información")
+@click.option("--verbose", "-v", is_flag=True, help="Modo verbose con más información en pantalla")
 def main(
     input_dir,
     output_dir,
@@ -51,19 +51,23 @@ def main(
     verbose,
 ):
     """
-    Conversor de Archivos TIFF a múltiples formatos
+    Conversor de Archivos TIFF a múltiples formatos con procesamiento por subcarpeta
 
-    Convierte todos los archivos TIFF de un directorio a los formatos configurados.
+    Busca recursivamente carpetas TIFF en subcarpetas del directorio de entrada
+    y convierte todos los archivos TIFF encontrados a los formatos configurados.
     Los conversores se pueden configurar y agregar de manera modular.
 
     Ejemplos:
-        python main.py --input "imagenes/" --output "convertidas/"
-        python main.py --input "imagenes/" --output "convertidas/" --formats JPGHIGH,PDF
-        python main.py --input "imagenes/" --output "convertidas/" --formats METS
-        python main.py --input "imagenes/" --output "convertidas/" --config "mi_config.yaml"
+        python main.py --input "carpeta_raiz/" --output "salida/"
+        python main.py --input "carpeta_raiz/" --output "salida/" --formats JPGHIGH,PDF
+        python main.py --input "carpeta_raiz/" --output "salida/" --formats METS
+        python main.py --input "carpeta_raiz/" --output "salida/" --config "mi_config.yaml"
     """
 
     try:
+        # Configurar modo verbose
+        output_manager.set_verbose_mode(verbose)
+
         # Inicializar conversor
         converter = TIFFConverter(config_path)
 
@@ -101,7 +105,7 @@ def main(
             )
 
         # Ejecutar conversión
-        output_manager.info("\n🚀 Iniciando conversión de archivos TIFF...")
+        output_manager.info("\n🚀 Iniciando conversión de archivos TIFF por subcarpeta...")
         result = converter.convert_directory(
             input_dir=input_dir,
             output_dir=output_dir,
@@ -114,6 +118,9 @@ def main(
             output_manager.success("\n✅ Conversión completada exitosamente!")
             if verbose:
                 _show_detailed_results(result)
+            
+            # Mostrar resumen por subcarpeta
+            _show_subfolder_summary(result)
         else:
             output_manager.error(f"\n❌ Error en la conversión: {result['error']}")
             sys.exit(1)
@@ -126,6 +133,9 @@ def main(
         if verbose:
             traceback.print_exc()
         sys.exit(1)
+    finally:
+        # Cerrar el gestor de salida
+        output_manager.close()
 
 
 def _validate_directories(input_dir: str, output_dir: str) -> bool:
@@ -157,7 +167,7 @@ def _show_converter_info(converter: TIFFConverter) -> None:
     output_manager.separator()
 
     output_manager.format_info("📁 Formatos disponibles", converter.get_available_formats())
-    output_manager.format_info("📋 Versión", "1.0.0")
+    output_manager.format_info("📋 Versión", "2.0.0")
     output_manager.format_info("🐍 Python", sys.version.split()[0])
 
     # Mostrar información de cada conversor
@@ -165,8 +175,8 @@ def _show_converter_info(converter: TIFFConverter) -> None:
         info = converter.get_converter_info(format_name)
         if info:
             output_manager.section(f"📋 {format_name.upper()}:")
-            output_manager.format_info("   Clase", info['name'])
-            output_manager.format_info("   Extensión", info['extension'])
+            output_manager.format_info("   Clase", info.get('class', 'N/A'))
+            output_manager.format_info("   Extensión", info.get('extension', 'N/A'))
             if "dpi" in info:
                 output_manager.format_info("   DPI", info['dpi'])
             if "quality" in info:
@@ -184,7 +194,7 @@ def _list_available_formats(converter: TIFFConverter) -> None:
     for i, format_name in enumerate(formats, 1):
         info = converter.get_converter_info(format_name)
         if info:
-            output_manager.format_info(f"{i}. {format_name}", info['name'])
+            output_manager.format_info(f"{i}. {format_name}", info.get('class', 'N/A'))
 
     output_manager.info(f"\nTotal: {len(formats)} formatos disponibles")
 
@@ -200,10 +210,11 @@ def _show_configuration(
     output_manager.section("⚙️  CONFIGURACIÓN")
     output_manager.separator()
 
-    output_manager.format_info("📂 Directorio de entrada", input_dir)
+    output_manager.format_info("📂 Directorio de entrada raíz", input_dir)
     output_manager.format_info("📂 Directorio de salida", output_dir)
     output_manager.format_info("🔄 Formatos a convertir", formats or "Todos los habilitados")
     output_manager.format_info("👥 Workers paralelos", max_workers or "Automático")
+    output_manager.info("📁 El sistema buscará carpetas TIFF en subcarpetas recursivamente")
 
 
 def _show_detailed_results(result: dict) -> None:
@@ -211,11 +222,31 @@ def _show_detailed_results(result: dict) -> None:
     output_manager.section("📊 RESULTADOS DETALLADOS")
     output_manager.separator()
 
-    output_manager.format_info("📁 Archivos procesados", result['files_processed'])
-    output_manager.format_info("✅ Conversiones exitosas", result['conversions_successful'])
-    output_manager.format_info("❌ Conversiones fallidas", result['conversions_failed'])
-    output_manager.format_info("⏱️  Tiempo total", f"{result['time_elapsed']} segundos")
-    output_manager.format_info("🔄 Formatos procesados", result['formats_processed'])
+    output_manager.format_info("📁 Subcarpetas procesadas", f"{result.get('subfolders_successful', 0)}/{result.get('subfolders_processed', 0)}")
+    output_manager.format_info("📄 Archivos totales", result.get('total_files_processed', 0))
+    output_manager.format_info("✅ Conversiones exitosas", result.get('total_conversions_successful', 0))
+    output_manager.format_info("❌ Conversiones fallidas", result.get('total_conversions_failed', 0))
+    output_manager.format_info("⏱️  Tiempo total", f"{result.get('time_elapsed', 0):.2f} segundos")
+
+
+def _show_subfolder_summary(result: dict) -> None:
+    """Muestra resumen por subcarpeta"""
+    summary = result.get('summary_by_subfolder', {})
+    if not summary:
+        return
+        
+    output_manager.section("📁 RESUMEN POR SUBCARPETA")
+    output_manager.separator()
+    
+    for subfolder_name, subfolder_summary in summary.items():
+        output_manager.format_info(f"📂 {subfolder_name}", 
+            f"{subfolder_summary.get('successful', 0)}/{subfolder_summary.get('total_files', 0)} archivos")
+        
+        if subfolder_summary.get('failed', 0) > 0:
+            output_manager.warning(f"   ⚠️  {subfolder_summary.get('failed', 0)} conversiones fallidas")
+    
+    # Mostrar información sobre logs
+    output_manager.info("\n📋 Los logs detallados se han guardado en la carpeta 'logs/' del directorio de salida")
 
 
 if __name__ == "__main__":

@@ -97,16 +97,16 @@ class TIFFConverter:
         max_workers: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
-        Convierte todos los archivos TIFF de un directorio
+        Convierte todos los archivos TIFF de todas las subcarpetas que contengan carpetas TIFF
 
         Args:
-            input_dir: Directorio de entrada con archivos TIFF
+            input_dir: Directorio de entrada raíz
             output_dir: Directorio de destino para las conversiones
             formats: Lista de formatos específicos a convertir (opcional)
             max_workers: Número máximo de workers para procesamiento paralelo
 
         Returns:
-            Diccionario con estadísticas de la conversión
+            Diccionario con estadísticas de la conversión por subcarpeta
         """
         start_time = time.time()
 
@@ -114,15 +114,14 @@ class TIFFConverter:
             # Inicializar procesador de archivos
             file_processor = FileProcessor(input_dir, output_dir)
 
-            # Obtener archivos TIFF
-            tiff_files = file_processor.get_tiff_files()
-            if not tiff_files:
+            # Obtener carpetas TIFF encontradas
+            tiff_folders = file_processor.get_tiff_folders()
+            if not tiff_folders:
                 return {
                     "success": False,
-                    "error": "No se encontraron archivos TIFF en el directorio de entrada",
-                    "files_processed": 0,
-                    "conversions_successful": 0,
-                    "conversions_failed": 0,
+                    "error": "No se encontraron carpetas TIFF en el directorio de entrada",
+                    "subfolders_processed": 0,
+                    "total_files_processed": 0,
                     "time_elapsed": 0,
                 }
 
@@ -135,261 +134,331 @@ class TIFFConverter:
                     return {
                         "success": False,
                         "error": error_msg,
-                        "files_processed": 0,
-                        "conversions_successful": 0,
-                        "conversions_failed": 0,
+                        "subfolders_processed": 0,
+                        "total_files_processed": 0,
                         "time_elapsed": 0,
                     }
             else:
                 formats = list(self.converters.keys())
 
-            # Crear estructura de salida
-            output_config = self.config_manager.get_output_config()
-            create_subdirs = output_config.get("create_subdirectories", True)
-            file_processor.create_output_structure(create_subdirs)
-
             # Configuración de procesamiento
             processing_config = self.config_manager.get_processing_config()
-            max_workers = max_workers or processing_config.get("max_workers", 4)
+            max_workers = max_workers or processing_config.get("max_workers", 1)
             overwrite = processing_config.get("overwrite_existing", False)
 
             output_manager.info(
-                f"Procesando {len(tiff_files)} archivos TIFF a {len(formats)} formatos..."
+                f"🚀 Procesando {len(tiff_folders)} subcarpetas con carpetas TIFF..."
             )
+            output_manager.info(f"Formatos a convertir: {', '.join(formats)}")
             output_manager.info(f"Usando {max_workers} workers en paralelo")
 
-            # Estadísticas
-            total_conversions = len(tiff_files) * len(formats)
-            successful_conversions = 0
-            failed_conversions = 0
+            # Habilitar logging a archivo
+            output_manager.enable_file_logging(output_dir)
 
-            # Procesar archivos
-            files_info = []  # Para almacenar información detallada de cada archivo
+            # Procesar cada subcarpeta
+            subfolder_results = {}
+            error_report = {}
 
-            # Crear barra de progreso principal
-            with tqdm(
-                total=total_conversions,
-                desc="Convirtiendo archivos",
-                position=0,
-                leave=True,
-            ) as main_pbar:
-                # Configurar el gestor de salida
-                output_manager.set_main_progress_bar(main_pbar)
+            for subfolder_name, tiff_folder in tiff_folders.items():
+                output_manager.section(f"📁 Procesando subcarpeta: {subfolder_name}")
+                
+                try:
+                    # Crear estructura de salida para esta subcarpeta
+                    if not file_processor.create_output_structure_for_subfolder(subfolder_name, formats):
+                        error_report[subfolder_name] = [f"Error creando estructura de salida"]
+                        continue
 
-                # Crear tareas
-                future_to_task = {}
-
-                # Usar ThreadPoolExecutor para procesamiento paralelo
-                with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    for tiff_file in tiff_files:
-                        for format_name in formats:
-                            converter = self.converters[format_name]
-
-                            # Usar método personalizado de nombre si está disponible
-                            if hasattr(converter, "get_output_filename"):
-                                output_path = converter.get_output_filename(
-                                    tiff_file, file_processor.output_dir
-                                )
-                            else:
-                                output_path = file_processor.get_output_path(
-                                    tiff_file, format_name, create_subdirs
-                                )
-
-                            # Validar ruta de salida
-                            if not file_processor.validate_output_path(
-                                output_path, overwrite
-                            ):
-                                continue
-
-                            # Enviar tarea al executor
-                            future = executor.submit(
-                                converter.convert, tiff_file, output_path
-                            )
-                            future_to_task[future] = (tiff_file.name, format_name)
-
-                # Procesar resultados con barra de progreso
-                for future in as_completed(future_to_task):
-                    file_name, format_name = future_to_task[future]
-
-                    try:
-                        success = future.result()
-                        if success:
-                            successful_conversions += 1
-                        else:
-                            failed_conversions += 1
-                    except Exception as e:
-                        output_manager.error(
-                            f"Error procesando {file_name} a {format_name}: {str(e)}"
-                        )
-                        failed_conversions += 1
-
-                    main_pbar.update(1)
-                    main_pbar.set_postfix(
-                        {
-                            "Exitosas": successful_conversions,
-                            "Fallidas": failed_conversions,
-                        }
+                    # Procesar archivos TIFF de esta subcarpeta
+                    subfolder_result = self._process_subfolder(
+                        file_processor, 
+                        subfolder_name, 
+                        tiff_folder, 
+                        formats, 
+                        max_workers, 
+                        overwrite
                     )
+                    
+                    subfolder_results[subfolder_name] = subfolder_result
+                    
+                    # Ejecutar postconversores para esta subcarpeta
+                    if subfolder_result.get("success") and self.postconverters:
+                        self._run_postconverters_for_subfolder(
+                            subfolder_result, 
+                            output_dir, 
+                            subfolder_name,
+                            file_processor
+                        )
+                    
+                    # Generar resumen de la subcarpeta
+                    summary = file_processor.get_summary_by_subfolder().get(subfolder_name, {})
+                    output_manager.log_subfolder_summary(subfolder_name, summary)
+                    
+                except Exception as e:
+                    error_msg = f"Error procesando subcarpeta {subfolder_name}: {str(e)}"
+                    output_manager.error(error_msg)
+                    error_report[subfolder_name] = [error_msg]
+                    continue
 
-            # Recopilar información detallada de los archivos procesados
-            for tiff_file in tiff_files:
-                file_info = {"input_file": str(tiff_file), "conversions": {}}
-
-                for format_name in formats:
-                    if format_name in self.converters:
-                        converter = self.converters[format_name]
-                        if hasattr(converter, "get_output_filename"):
-                            output_path = converter.get_output_filename(
-                                tiff_file, file_processor.output_dir
-                            )
-                        else:
-                            output_path = file_processor.get_output_path(
-                                tiff_file, format_name, create_subdirs
-                            )
-
-                        # Verificar si el archivo existe (conversión exitosa)
-                        if output_path.exists():
-                            file_info["conversions"][format_name] = {
-                                "success": True,
-                                "output_path": str(output_path),
-                            }
-                        else:
-                            file_info["conversions"][format_name] = {
-                                "success": False,
-                                "output_path": str(output_path),
-                            }
-
-                files_info.append(file_info)
-
-            # Calcular tiempo total
+            # Generar reporte final
             time_elapsed = time.time() - start_time
-
-            # Resumen final
-            result = {
-                "success": True,
-                "files_processed": len(tiff_files),
-                "formats_processed": formats,
-                "conversions_successful": successful_conversions,
-                "conversions_failed": failed_conversions,
-                "total_conversions": total_conversions,
-                "time_elapsed": round(time_elapsed, 2),
-                "input_directory": input_dir,
-                "output_directory": output_dir,
-                "files_info": files_info,  # Incluir la información detallada
-            }
-
-            self._print_summary(result)
-
-            # Generar archivos MET por formato si está habilitado
-            met_metadata_enabled = self.config_manager.is_format_enabled(
-                "METS"
-            ) or self.config_manager.config.get("METS", {}).get(
-                "enabled", False
+            final_result = self._generate_final_result(
+                subfolder_results, 
+                error_report, 
+                time_elapsed,
+                file_processor
             )
-            if met_metadata_enabled:
-                # Convertir output_dir a Path antes de pasarlo al postconverter
-                output_path = Path(output_dir)
-                self._generate_format_specific_met(result, output_path)
 
-            return result
+            # Log del reporte de errores si los hay
+            if error_report:
+                output_manager.log_error_report(error_report)
+
+            return final_result
 
         except Exception as e:
-            time_elapsed = time.time() - start_time
+            output_manager.error(f"❌ Error inesperado en la conversión: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
+                "subfolders_processed": 0,
+                "total_files_processed": 0,
+                "time_elapsed": time.time() - start_time,
+            }
+
+    def _process_subfolder(
+        self,
+        file_processor: FileProcessor,
+        subfolder_name: str,
+        tiff_folder: Path,
+        formats: List[str],
+        max_workers: int,
+        overwrite: bool
+    ) -> Dict[str, Any]:
+        """
+        Procesa una subcarpeta específica
+        
+        Args:
+            file_processor: Procesador de archivos
+            subfolder_name: Nombre de la subcarpeta
+            tiff_folder: Ruta a la carpeta TIFF
+            formats: Formatos a convertir
+            max_workers: Número de workers
+            overwrite: Si sobrescribir archivos
+            
+        Returns:
+            Resultado del procesamiento de la subcarpeta
+        """
+        # Obtener archivos TIFF de esta subcarpeta
+        tiff_files = file_processor.get_tiff_files_from_folder(tiff_folder)
+        if not tiff_files:
+            return {
+                "success": False,
+                "error": f"No se encontraron archivos TIFF en {subfolder_name}/TIFF/",
                 "files_processed": 0,
                 "conversions_successful": 0,
                 "conversions_failed": 0,
-                "time_elapsed": round(time_elapsed, 2),
             }
 
-    def _print_summary(self, result: Dict[str, Any]) -> None:
-        """Imprime un resumen de la conversión"""
-        output_manager.section("RESUMEN DE CONVERSIÓN")
+        output_manager.info(f"📄 Encontrados {len(tiff_files)} archivos TIFF en {subfolder_name}/TIFF/")
+
+        # Estadísticas
+        total_conversions = len(tiff_files) * len(formats)
+        successful_conversions = 0
+        failed_conversions = 0
+
+        # Crear barra de progreso para esta subcarpeta
+        with tqdm(
+            total=total_conversions,
+            desc=f"Convirtiendo {subfolder_name}",
+            position=0,
+            leave=True,
+        ) as pbar:
+            output_manager.set_main_progress_bar(pbar)
+
+            # Procesar archivos
+            for tiff_file in tiff_files:
+                for format_name in formats:
+                    converter = self.converters[format_name]
+
+                    # Generar ruta de salida para esta subcarpeta
+                    output_path = file_processor.get_output_path_for_subfolder(
+                        tiff_file, format_name, subfolder_name
+                    )
+
+                    # Validar ruta de salida
+                    if not file_processor.validate_output_path(output_path, overwrite):
+                        pbar.update(1)
+                        failed_conversions += 1
+                        continue
+
+                    # Convertir archivo
+                    try:
+                        success = converter.convert(tiff_file, output_path)
+                        
+                        if success:
+                            successful_conversions += 1
+                            # Agregar resultado para postconversores
+                            file_processor.add_conversion_result(subfolder_name, {
+                                "input_file": str(tiff_file),
+                                "output_file": str(output_path),
+                                "format": format_name,
+                                "success": True,
+                                "subfolder": subfolder_name
+                            })
+                        else:
+                            failed_conversions += 1
+                            file_processor.add_conversion_result(subfolder_name, {
+                                "input_file": str(tiff_file),
+                                "output_file": str(output_path),
+                                "format": format_name,
+                                "success": False,
+                                "subfolder": subfolder_name
+                            })
+                        
+                    except Exception as e:
+                        failed_conversions += 1
+                        output_manager.error(f"❌ Error convirtiendo {tiff_file.name} a {format_name}: {str(e)}")
+                        file_processor.add_conversion_result(subfolder_name, {
+                            "input_file": str(tiff_file),
+                            "output_file": str(output_path),
+                            "format": format_name,
+                            "success": False,
+                            "error": str(e),
+                            "subfolder": subfolder_name
+                        })
+
+                    pbar.update(1)
+
+        return {
+            "success": True,
+            "files_processed": len(tiff_files),
+            "conversions_successful": successful_conversions,
+            "conversions_failed": failed_conversions,
+            "formats_processed": formats,
+            "subfolder": subfolder_name
+        }
+
+    def _run_postconverters_for_subfolder(
+        self,
+        subfolder_result: Dict[str, Any],
+        output_dir: str,
+        subfolder_name: str,
+        file_processor: FileProcessor
+    ):
+        """
+        Ejecuta los postconversores para una subcarpeta específica
+        
+        Args:
+            subfolder_result: Resultado del procesamiento de la subcarpeta
+            output_dir: Directorio de salida
+            subfolder_name: Nombre de la subcarpeta
+            file_processor: Procesador de archivos
+        """
+        output_manager.info(f"🔄 Ejecutando postconversores para {subfolder_name}...")
+        
+        # Debug temporal: verificar el estado del file_processor
+        conversion_results = file_processor.get_conversion_results()
+        output_manager.info(f"Debug - file_processor.get_conversion_results(): {conversion_results}")
+        
+        for postconverter_name, postconverter in self.postconverters.items():
+            try:
+                # Crear resultado específico para esta subcarpeta
+                subfolder_conversion_result = {
+                    "success": True,
+                    "files_info": file_processor.get_conversion_results().get(subfolder_name, []),
+                    "subfolder": subfolder_name
+                }
+                
+                # Ejecutar postconversor
+                success = postconverter.process(subfolder_conversion_result, Path(output_dir))
+                
+                if success:
+                    output_manager.success(f"✅ Postconversor {postconverter_name} completado para {subfolder_name}")
+                else:
+                    output_manager.error(f"❌ Postconversor {postconverter_name} falló para {subfolder_name}")
+                    
+            except Exception as e:
+                output_manager.error(f"❌ Error en postconversor {postconverter_name} para {subfolder_name}: {str(e)}")
+
+    def _generate_final_result(
+        self,
+        subfolder_results: Dict[str, Dict],
+        error_report: Dict[str, List[str]],
+        time_elapsed: float,
+        file_processor: FileProcessor
+    ) -> Dict[str, Any]:
+        """
+        Genera el resultado final de la conversión
+        
+        Args:
+            subfolder_results: Resultados por subcarpeta
+            error_report: Reporte de errores
+            time_elapsed: Tiempo transcurrido
+            file_processor: Procesador de archivos
+            
+        Returns:
+            Resultado final consolidado
+        """
+        # Calcular estadísticas totales
+        total_subfolders = len(subfolder_results) + len(error_report)
+        successful_subfolders = len(subfolder_results)
+        failed_subfolders = len([k for k, v in error_report.items() if v])
+        
+        total_files = sum(r.get("files_processed", 0) for r in subfolder_results.values())
+        total_conversions = sum(r.get("conversions_successful", 0) for r in subfolder_results.values())
+        total_failures = sum(r.get("conversions_failed", 0) for r in subfolder_results.values())
+
+        # Generar resumen por subcarpeta
+        summary_by_subfolder = file_processor.get_summary_by_subfolder()
+
+        result = {
+            "success": successful_subfolders > 0,
+            "subfolders_processed": total_subfolders,
+            "subfolders_successful": successful_subfolders,
+            "subfolders_failed": failed_subfolders,
+            "total_files_processed": total_files,
+            "total_conversions_successful": total_conversions,
+            "total_conversions_failed": total_failures,
+            "time_elapsed": time_elapsed,
+            "subfolder_results": subfolder_results,
+            "error_report": error_report,
+            "summary_by_subfolder": summary_by_subfolder
+        }
+
+        # Mostrar resumen final
+        output_manager.section("📊 RESUMEN FINAL DE CONVERSIÓN")
         output_manager.separator()
+        output_manager.format_info("📁 Subcarpetas procesadas", f"{successful_subfolders}/{total_subfolders}")
+        output_manager.format_info("📄 Archivos totales", total_files)
+        output_manager.format_info("✅ Conversiones exitosas", total_conversions)
+        output_manager.format_info("❌ Conversiones fallidas", total_failures)
+        output_manager.format_info("⏱️  Tiempo total", f"{time_elapsed:.2f} segundos")
 
-        if result["success"]:
-            output_manager.success("Conversión completada exitosamente")
-            output_manager.format_info(
-                "📁 Archivos procesados", result["files_processed"]
-            )
-            output_manager.format_list(
-                "🔄 Formatos procesados", result["formats_processed"]
-            )
-            output_manager.format_info(
-                "✅ Conversiones exitosas", result["conversions_successful"]
-            )
-            output_manager.format_info(
-                "❌ Conversiones fallidas", result["conversions_failed"]
-            )
-            output_manager.format_info(
-                "⏱️  Tiempo total", f"{result['time_elapsed']} segundos"
-            )
-            output_manager.format_info(
-                "📂 Directorio de entrada", result["input_directory"]
-            )
-            output_manager.format_info(
-                "📂 Directorio de salida", result["output_directory"]
-            )
+        if error_report:
+            output_manager.warning(f"⚠️  {failed_subfolders} subcarpetas tuvieron errores")
+            output_manager.info("📋 Revisa el archivo de log para detalles completos")
 
-            # Información específica de los formatos
-            if "JPGHIGH" in result["formats_processed"]:
-                output_manager.info("🖼️  JPG 400 DPI: Alta resolución para impresión")
-            if "JPGLOW" in result["formats_processed"]:
-                output_manager.info("🖼️  JPG 200 DPI: Resolución media para web")
-            if "PDF" in result["formats_processed"]:
-                output_manager.info(
-                    "📄 PDF con EasyOCR: Texto buscable y seleccionable"
-                )
-            if "METS" in result["formats_processed"]:
-                output_manager.info(
-                    "📋 MET Metadata: Archivos XML con metadatos detallados"
-                )
-        else:
-            output_manager.error(f"Error en la conversión: {result['error']}")
-
-        output_manager.separator()
+        return result
 
     def get_available_formats(self) -> List[str]:
         """Retorna la lista de formatos disponibles"""
         return list(self.converters.keys())
 
-    def get_available_postconverters(self) -> List[str]:
-        """Retorna la lista de postconversores disponibles"""
-        return list(self.postconverters.keys())
-
     def get_converter_info(self, format_name: str) -> Optional[Dict[str, Any]]:
-        """
-        Obtiene información de un conversor específico
-
-        Args:
-            format_name: Nombre del formato
-
-        Returns:
-            Información del conversor o None si no existe
-        """
-        if format_name not in self.converters:
-            return None
-
-        converter = self.converters[format_name]
-        info = {
-            "name": converter.__class__.__name__,
-            "format": format_name,
-            "extension": converter.get_file_extension(),
-            "config": converter.config,
-        }
-
-        # Información específica por tipo de conversor
-        if hasattr(converter, "dpi"):
-            info["dpi"] = converter.dpi
-        if hasattr(converter, "quality"):
-            info["quality"] = converter.quality
-        if hasattr(converter, "ocr_language"):
-            info["ocr_language"] = converter.ocr_language
-            info["ocr_enabled"] = converter.create_searchable_pdf
-
-        return info
+        """Retorna información de un conversor específico"""
+        if format_name in self.converters:
+            converter = self.converters[format_name]
+            info = converter.get_converter_info()
+            
+            # Agregar información específica del formato
+            if format_name == "JPGHIGH":
+                info.update({"dpi": 400, "quality": converter.quality})
+            elif format_name == "JPGLOW":
+                info.update({"dpi": 200, "quality": converter.quality})
+            elif format_name == "PDF":
+                info.update({"ocr_language": converter.ocr_language})
+            
+            return info
+        return None
 
     def reload_config(self) -> bool:
         """Recarga la configuración y reinicializa los conversores"""
@@ -397,43 +466,6 @@ class TIFFConverter:
             self.converters = self._initialize_converters()
             return True
         return False
-
-    def _generate_format_specific_met(
-        self, result: Dict[str, Any], output_dir: Path
-    ) -> None:
-        """
-        Genera archivos MET separados, uno por cada tipo de formato
-
-        Args:
-            result: Resultado de la conversión
-            output_dir: Directorio de salida
-        """
-        try:
-            if not result.get("success"):
-                return
-
-            # Ejecutar postconversores habilitados
-            for postconverter_name, postconverter in self.postconverters.items():
-                try:
-                    output_manager.info(
-                        f"Ejecutando postconversor: {postconverter.get_name()}"
-                    )
-                    success = postconverter.process(result, output_dir)
-                    if success:
-                        output_manager.success(
-                            f"Postconversor {postconverter_name} ejecutado exitosamente"
-                        )
-                    else:
-                        output_manager.warning(
-                            f"Postconversor {postconverter_name} tuvo problemas"
-                        )
-                except Exception as e:
-                    output_manager.error(
-                        f"Error ejecutando postconversor {postconverter_name}: {str(e)}"
-                    )
-
-        except Exception as e:
-            output_manager.error(f"Error ejecutando postconversores: {str(e)}")
 
 
 def main():

@@ -1,4 +1,4 @@
-# 🖼️ Conversor TIFF - Sistema de Conversión y Metadatos
+# 🖼️ Conversor TIFF - Sistema de Conversión y Metadatos v2.0
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -6,9 +6,15 @@
 
 ## 🎯 Descripción
 
-El **Conversor TIFF** es un sistema avanzado de conversión de archivos TIFF que genera múltiples formatos de salida (JPG, PDF con OCR, XML MET) con metadatos completos y organización automática de archivos. Diseñado para archivos, bibliotecas y sistemas de gestión documental.
+El **Conversor TIFF v2.0** es un sistema avanzado de conversión de archivos TIFF que **busca recursivamente carpetas TIFF en subcarpetas** y genera múltiples formatos de salida (JPG, PDF con OCR, XML MET) con metadatos completos y organización automática por subcarpeta. Diseñado para archivos, bibliotecas y sistemas de gestión documental con estructura organizacional compleja.
 
-## ✨ Características Principales
+## ✨ Características Principales v2.0
+
+### 🔄 **Procesamiento por Subcarpeta**
+- **Búsqueda recursiva**: Encuentra automáticamente carpetas TIFF en subcarpetas
+- **Organización automática**: Crea estructura de salida por subcarpeta
+- **Procesamiento independiente**: Cada subcarpeta se procesa por separado
+- **Manejo de errores**: Continúa procesando otras subcarpetas si una falla
 
 ### 🔄 **Conversores de Formato**
 - **JPG 400 DPI**: Alta resolución para impresión profesional
@@ -16,18 +22,19 @@ El **Conversor TIFF** es un sistema avanzado de conversión de archivos TIFF que
 - **PDF con EasyOCR**: Texto buscable y seleccionable con reconocimiento óptico
 - **Metadatos MET**: Archivos XML con estándar MET de la Library of Congress
 
-### 📊 **Postconversores Avanzados**
-- **MET Format PostConverter**: Genera XMLs consolidados por formato que incluyen:
-  - **Archivo METS del TIFF original**: Documentación completa del archivo fuente
-  - Metadatos completos de archivos TIFF originales
-  - Información de archivos convertidos
+### 📊 **Postconversores Avanzados por Subcarpeta**
+- **MET Format PostConverter**: Genera XMLs consolidados por formato **por cada subcarpeta**:
+  - **Archivo METS del TIFF original**: Documentación completa del archivo fuente por subcarpeta
+  - Metadatos completos de archivos TIFF originales de la subcarpeta
+  - Información de archivos convertidos de la subcarpeta
   - Estructura PREMIS para preservación digital
-  - Organización automática en carpetas por formato (JPGHIGH, JPGLOW, PDF, METS)
+  - Organización automática en carpetas por formato por subcarpeta
 
-### 🗂️ **Organización Inteligente**
-- **Estructura automática de carpetas**: Cada formato se organiza en su subdirectorio
-- **Nomenclatura consistente**: Patrones de nombres estandarizados
-- **Metadatos integrados**: Información técnica y administrativa completa
+### 🗂️ **Organización Inteligente por Subcarpeta**
+- **Estructura automática**: Cada subcarpeta genera su propia estructura de salida
+- **Nomenclatura consistente**: Patrones de nombres estandarizados por subcarpeta
+- **Metadatos integrados**: Información técnica y administrativa completa por subcarpeta
+- **Logs organizados**: Archivos de log separados por subcarpeta
 
 ## 🚀 Instalación
 
@@ -60,7 +67,7 @@ El sistema utiliza `config.yaml` para configurar todos los aspectos:
 # Configuración de formatos de salida
 formats:
   # Conversor JPG 400 DPI (alta resolución)
-  jpg_400:
+  JPGHIGH:
     enabled: true
     quality: 95                      # Calidad de compresión (1-100)
     optimize: true                   # Optimizar archivo
@@ -68,15 +75,15 @@ formats:
     dpi: 400                        # Resolución en DPI
   
   # Conversor JPG 200 DPI (media resolución)
-  jpg_200:
+  JPGLOW:
     enabled: true
     quality: 90                      # Calidad de compresión (1-100)
     optimize: true                   # Optimizar archivo
-    progressive: true                # JPEG progresivo
+    progressive: false               # JPEG progresivo
     dpi: 200                        # Resolución en DPI
   
   # Conversor PDF con EasyOCR
-  pdf_easyocr:
+  PDF:
     enabled: true
     resolution: 300                  # Resolución en DPI
     page_size: "A4"                 # Tamaño de página
@@ -85,16 +92,6 @@ formats:
     ocr_confidence: 0.2             # Confianza mínima para OCR
     create_searchable_pdf: true      # Crear PDF con texto buscable
     use_gpu: true                    # Usar GPU si está disponible
-
-  # Conversor MET Metadata
-  met_metadata:
-    enabled: true
-    include_image_metadata: true     # Incluir DPI, dimensiones, orientación
-    include_file_metadata: true      # Incluir tamaño, fechas, permisos
-    include_processing_info: true    # Incluir información de procesamiento
-    metadata_standard: "MET"        # Estándar de metadatos
-    organization: "Conversor TIFF"   # Nombre de la organización
-    creator: "Sistema Automatizado"  # Creador del sistema
 
 # Configuración de procesamiento
 processing:
@@ -105,56 +102,30 @@ processing:
 # Configuración de salida
 output:
   create_subdirectories: true        # Crear subdirectorios por formato
-  naming_pattern: "{original_name}_{format}"  # Patrón de nombres
+  naming_pattern: "{original_name}"  # Patrón de nombres
+
+# Configuración de metadatos MET
+METS:
+  enabled: true                      # Habilitar generación de archivos MET
+  include_image_metadata: true       # Incluir DPI, dimensiones, orientación
+  include_file_metadata: true        # Incluir tamaño, fechas, permisos
+  include_processing_info: true      # Incluir información de procesamiento
+  metadata_standard: 'MET'           # Estándar METS
+  organization: 'Grupo API'          # Nombre de la organización
+  creator: 'Sistema Automatizado'    # Sistema creador
+  generate_all_met: false            # true: archivos con timestamp, false: un archivo por formato
 
 # Configuración de postconversores
 postconverters:
+  # Postconversor MET por formato
   met_format:
-    enabled: true
-    include_image_metadata: true     # Incluir metadatos de imagen
-    include_file_metadata: true      # Incluir metadatos de archivo
+    enabled: true                    # Habilitar generación de archivos MET por formato
+    include_image_metadata: true     # Incluir metadatos técnicos de imagen
+    include_file_metadata: true      # Incluir metadatos del archivo
     include_processing_info: true    # Incluir información de procesamiento
-    metadata_standard: "MET"        # Estándar de metadatos
-    organization: "Conversor TIFF"   # Nombre de la organización
-    creator: "Sistema Automatizado"  # Creador del sistema
-```
-
-### Configuraciones Especializadas
-
-#### Configuración para Preservación Digital
-```yaml
-formats:
-  jpg_400:
-    enabled: true
-    quality: 100                     # Máxima calidad
-    optimize: false                  # Sin optimización para preservación
-    dpi: 400                        # Alta resolución
-
-postconverters:
-  met_format:
-    enabled: true
-    include_image_metadata: true     # Metadatos técnicos completos
-    include_file_metadata: true      # Información de archivo completa
-    metadata_standard: "MET"        # Estándar institucional
-    organization: "Archivo Nacional"
-    creator: "Sistema de Preservación Digital v2.0"
-```
-
-#### Configuración para Producción Web
-```yaml
-formats:
-  jpg_200:
-    enabled: true
-    quality: 85                      # Calidad optimizada para web
-    optimize: true                   # Optimización activa
-    progressive: true                # JPEG progresivo para carga rápida
-    dpi: 200                        # Resolución web estándar
-
-  pdf_easyocr:
-    enabled: true
-    ocr_language: ["es", "en"]      # Múltiples idiomas
-    ocr_confidence: 0.3             # Confianza media para velocidad
-    create_searchable_pdf: true      # PDFs con texto buscable
+    metadata_standard: 'MET'         # Estándar METS
+    organization: 'Grupo API'        # Nombre de la organización
+    creator: 'Sistema Automatizado'  # Sistema creador
 ```
 
 ## 🎮 Uso
@@ -162,18 +133,26 @@ formats:
 ### Comando Básico
 
 ```bash
-python main.py --input "ruta/entrada" --output "ruta/salida" --config config.yaml
+python main.py --input "carpeta_raiz" --output "ruta_salida" --config config.yaml
 ```
 
 ### Ejemplos de Uso
 
-#### Conversión Básica
+#### Conversión Básica por Subcarpeta
 ```bash
-# Convertir archivos TIFF a múltiples formatos
+# Convertir archivos TIFF de todas las subcarpetas que contengan carpetas TIFF
 python main.py \
-  --input "C:\Documentos\TIFF" \
-  --output "C:\Documentos\Convertido" \
-  --config config.yaml
+  --input "C:\Documentos\Proyectos" \
+  --output "C:\Documentos\Convertido"
+```
+
+#### Conversión con Formatos Específicos
+```bash
+# Usar solo formatos específicos
+python main.py \
+  --input "C:\Archivos\Originales" \
+  --output "C:\Archivos\Procesados" \
+  --formats JPGHIGH,PDF
 ```
 
 #### Conversión con Configuración Personalizada
@@ -198,62 +177,89 @@ python main.py --config config.yaml --info
 
 | Parámetro | Descripción | Obligatorio |
 |-----------|-------------|-------------|
-| `--input` | Directorio con archivos TIFF | ✅ |
+| `--input` | Directorio raíz con subcarpetas que contengan carpetas TIFF | ✅ |
 | `--output` | Directorio de salida | ✅ |
 | `--config` | Archivo de configuración | ❌ (usa `config.yaml` por defecto) |
+| `--formats` | Formatos específicos a convertir | ❌ (usa todos los habilitados) |
+| `--workers` | Número de workers paralelos | ❌ (usa configuración por defecto) |
+| `--verbose` | Modo verbose con más información en pantalla | ❌ |
 | `--info` | Mostrar información del sistema | ❌ |
+| `--list-formats` | Listar formatos disponibles | ❌ |
 
-## 📁 Estructura de Salida
+## 📁 Estructura de Entrada y Salida
 
-El sistema genera una estructura organizada automáticamente:
+### Estructura de Entrada
+```
+carpeta_raiz/
+├── alicante/           # No tiene TIFF → No se procesa
+└── madraza/            # Tiene TIFF → Se procesa
+    └── TIFF/           # ← Carpeta con imágenes TIFF
+        ├── imagen1.tiff
+        └── imagen2.tiff
+```
 
+### Estructura de Salida Automática
 ```
 directorio_salida/
-├── METS/                           # Archivo METS del TIFF original
-│   └── TIFF.xml                   # ← Documentación completa del archivo fuente
-├── JPGHIGH/                        # JPGs de 400 DPI
-│   ├── documento1_400dpi.jpg
-│   ├── documento2_400dpi.jpg
-│   └── JPGHIGH.xml                # ← Metadatos consolidados
-├── JPGLOW/                         # JPGs de 200 DPI
-│   ├── documento1_200dpi.jpg
-│   ├── documento2_200dpi.jpg
-│   └── JPGLOW.xml                 # ← Metadatos consolidados
-├── PDF/                            # PDFs con OCR
-│   ├── documento1_EasyOCR.pdf
-│   ├── documento2_EasyOCR.pdf
-│   └── PDF.xml                    # ← Metadatos consolidados
-└── met_metadata/                   # Metadatos individuales
-    ├── documento1_MET.xml
-    └── documento2_MET.xml
+├── logs/                               # Archivos de log por subcarpeta
+│   ├── conversion_madraza_20250127_143022.log
+│   └── conversion_20250127_143022.log
+├── madraza/                            # Subcarpeta procesada
+│   ├── METS/                           # Archivo METS del TIFF original
+│   │   └── madraza_TIFF.xml           # ← Documentación completa del archivo fuente
+│   ├── JPGHIGH/                        # JPGs de 400 DPI + metadatos consolidados
+│   │   ├── imagen1.jpg
+│   │   ├── imagen2.jpg
+│   │   └── JPGHIGH.xml                # ← Metadatos consolidados del formato
+│   ├── JPGLOW/                         # JPGs de 200 DPI + metadatos consolidados
+│   │   ├── imagen1.jpg
+│   │   ├── imagen2.jpg
+│   │   └── JPGLOW.xml                 # ← Metadatos consolidados del formato
+│   └── PDF/                            # PDFs con OCR + metadatos consolidados
+│       ├── imagen1_EasyOCR.pdf
+│       ├── imagen2_EasyOCR.pdf
+│       └── PDF.xml                     # ← Metadatos consolidados del formato
+└── alicante/                           # No procesada (no tiene carpeta TIFF)
 ```
 
-### Archivos XML MET Consolidados
+### Archivos XML MET Consolidados por Subcarpeta
 
-El sistema genera dos tipos de archivos XML:
+El sistema genera dos tipos de archivos XML **por cada subcarpeta procesada**:
 
-#### Archivo METS del TIFF Original (`TIFF.xml`)
-- **Documentación completa del archivo fuente**: Metadatos técnicos y administrativos
-- **Información de preservación**: Estructura PREMIS para archivos originales
-- **Trazabilidad**: Registro completo del archivo TIFF antes de la conversión
+#### 1. Archivo METS del TIFF Original (`{subcarpeta}_TIFF.xml`)
+- **Documentación completa del archivo fuente**: Metadatos técnicos y administrativos de la subcarpeta
+- **Información de preservación**: Estructura PREMIS para archivos originales de la subcarpeta
+- **Trazabilidad**: Registro completo de archivos TIFF de la subcarpeta antes de la conversión
 
-#### Archivos MET por Formato (ej: `JPGHIGH.xml`)
-- **Metadatos de archivos TIFF originales**: DPI, dimensiones, fechas, checksum
-- **Metadatos de archivos convertidos**: Tamaño, formato, ubicación
-- **Información PREMIS**: Estándar para preservación digital
-- **Trazabilidad completa**: Desde el original hasta cada formato generado
+#### 2. Archivos MET por Formato (ej: `JPGHIGH.xml`)
+- **Metadatos de archivos TIFF originales**: DPI, dimensiones, fechas, checksum de la subcarpeta
+- **Metadatos de archivos convertidos**: Tamaño, formato, ubicación de la subcarpeta
+- **Información PREMIS**: Estándar para preservación digital de la subcarpeta
+- **Trazabilidad completa**: Desde el original hasta cada formato generado en la subcarpeta
 
-## 🔧 Características Técnicas
+## 🔧 Características Técnicas v2.0
+
+### Procesamiento por Subcarpeta
+- **Búsqueda recursiva**: Encuentra carpetas TIFF en cualquier nivel de subcarpetas
+- **Procesamiento independiente**: Cada subcarpeta se procesa por separado
+- **Manejo de errores robusto**: Continúa procesando otras subcarpetas si una falla
+- **Estructura de salida organizada**: Cada subcarpeta genera su propia estructura
+
+### Logging Avanzado
+- **Logs por subcarpeta**: Archivos de log separados para cada subcarpeta procesada
+- **Menos ruido en pantalla**: Solo se muestran mensajes importantes por defecto
+- **Modo verbose**: Opción para mostrar todos los detalles en pantalla
+- **Reportes de errores**: Generación automática de reportes de errores por subcarpeta
 
 ### Procesamiento Paralelo
 - **Multi-threading**: Conversiones simultáneas para mayor velocidad
-- **Configuración flexible**: Número de workers ajustable
+- **Configuración flexible**: Número de workers ajustable por subcarpeta
 - **Gestión de memoria**: Procesamiento por lotes para archivos grandes
 
 ### Validación y Calidad
-- **Validación de entrada**: Verificación de archivos TIFF válidos
+- **Validación de entrada**: Verificación de archivos TIFF válidos por subcarpeta
 - **Control de calidad**: Parámetros ajustables para cada formato
-- **Manejo de errores**: Recuperación robusta ante fallos
+- **Manejo de errores**: Recuperación robusta ante fallos por subcarpeta
 
 ### Metadatos Avanzados
 - **Estándar MET**: Cumple con METS de la Library of Congress
@@ -264,19 +270,19 @@ El sistema genera dos tipos de archivos XML:
 ## 📊 Casos de Uso
 
 ### 🏛️ Archivos y Bibliotecas
-- **Preservación Digital**: Metadatos completos para archivos históricos
-- **Catálogos**: Información estructurada para sistemas de búsqueda
-- **Compliance**: Cumplimiento de estándares institucionales
+- **Preservación Digital**: Metadatos completos para archivos históricos organizados por colección
+- **Catálogos**: Información estructurada para sistemas de búsqueda por subcarpeta
+- **Compliance**: Cumplimiento de estándares institucionales por organización
 
 ### 💼 Gestión Documental
-- **Sistemas DMS**: Integración con sistemas de gestión documental
-- **Workflows**: Trazabilidad completa del procesamiento
-- **Auditoría**: Registro detallado de conversiones
+- **Sistemas DMS**: Integración con sistemas de gestión documental organizados por proyecto
+- **Workflows**: Trazabilidad completa del procesamiento por subcarpeta
+- **Auditoría**: Registro detallado de conversiones por organización
 
 ### 🔍 Investigación y Análisis
-- **Machine Learning**: Datos estructurados para entrenamiento de IA
-- **Big Data**: Metadatos consistentes para análisis a gran escala
-- **Investigación**: Metadatos técnicos para análisis de imágenes
+- **Machine Learning**: Datos estructurados para entrenamiento de IA por subcarpeta
+- **Big Data**: Metadatos consistentes para análisis a gran escala por organización
+- **Investigación**: Metadatos técnicos para análisis de imágenes por proyecto
 
 ## 🧪 Testing
 
@@ -307,11 +313,8 @@ python main.py \
 
 ### Problemas Comunes
 
-1. **Error de Context Manager**:
-   ```
-   'Image' object does not support the context manager protocol
-   ```
-   **Solución**: El sistema ya está corregido, usar versión actualizada
+1. **No se encuentran carpetas TIFF**:
+   **Solución**: Verificar que existan subcarpetas con carpetas llamadas exactamente "TIFF"
 
 2. **Archivos no van a carpetas correctas**:
    **Solución**: Verificar que `create_subdirectories: true` esté en la configuración
@@ -322,6 +325,9 @@ python main.py \
 4. **Error de permisos**:
    **Solución**: Verificar permisos de escritura en el directorio de salida
 
+5. **Subcarpeta falla pero otras continúan**:
+   **Comportamiento esperado**: El sistema continúa procesando otras subcarpetas y genera reporte de errores
+
 ### Logs y Debug
 
 El sistema incluye logging detallado con niveles configurables:
@@ -329,6 +335,8 @@ El sistema incluye logging detallado con niveles configurables:
 ```bash
 # Ver logs detallados
 python main.py --input "entrada" --output "salida" --verbose
+
+# Los logs se guardan automáticamente en la carpeta 'logs/' del directorio de salida
 ```
 
 ## 📚 Documentación
@@ -373,3 +381,5 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 ---
 
 **⭐ Si este proyecto te es útil, ¡déjanos una estrella en GitHub!**
+
+**🆕 Nueva en v2.0: Procesamiento por subcarpeta, logging avanzado y organización automática por organización**

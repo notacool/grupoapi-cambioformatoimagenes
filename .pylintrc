@@ -1,38 +1,55 @@
 [MASTER]
-disable=
-    C0114,  # missing-module-docstring
-    C0115,  # missing-class-docstring
-    C0116,  # missing-function-docstring
-    W0718,  # broad-exception-caught
-    R0912,  # too-many-branches
-    R0913,  # too-many-arguments
-    R0914,  # too-many-locals
-    R0915,  # too-many-statements
-    R0801,  # duplicate-code
-    W0107,  # unnecessary-pass
-    W0212,  # protected-access
-    W1309,  # f-string-without-interpolation
-    C0415,  # import-outside-toplevel
-    E1120,  # no-value-for-parameter
-    R0917,  # too-many-positional-arguments
+# Usar múltiples procesos para acelerar el análisis
+jobs=0
 
-[FORMAT]
-max-line-length=100
+# Archivos y directorios a ignorar
+ignore=CVS,.git,__pycache__,.venv,venv,env
+
+# Archivos a analizar
+recursive=yes
 
 [MESSAGES CONTROL]
-disable=
-    C0114,
-    C0115,
-    C0116,
-    W0718,
-    R0912,
-    R0913,
-    R0914,
-    R0915,
-    R0801,
-    W0107,
-    W0212,
-    W1309,
-    C0415,
-    E1120,
-    R0917
+# Deshabilitar warnings específicos
+disable=C0114,C0115,C0116,E0401,W0611,W0613
+
+# Habilitar solo ciertos warnings
+enable=C0301,C0303
+
+[REPORTS]
+# Formato del reporte
+output-format=text
+
+# Mostrar score
+score=yes
+
+# Mostrar estadísticas
+reports=yes
+
+[FORMAT]
+# Longitud máxima de línea
+max-line-length=120
+
+# Máximo número de caracteres en una línea de docstring
+docstring-max-length=120
+
+[BASIC]
+# Nombres de variables válidos
+good-names=i,j,k,ex,Run,_,id
+
+# Nombres de variables a evitar
+bad-names=foo,bar,baz,toto,tutu,tata
+
+[SIMILARITIES]
+# Número mínimo de líneas similares para reportar
+min-similarity-lines=4
+
+# Número mínimo de tokens similares para reportar
+min-similarity-tokens=50
+
+[TYPECHECK]
+# Lista de módulos donde los miembros pueden ser dinámicos
+generated-members=REQUEST,acl_users,aq_parent,"[a-zA-Z]+_set{1,2}",save,delete
+
+[MISCELLANEOUS]
+# Lista de notas que se pueden usar en docstrings
+notes=
