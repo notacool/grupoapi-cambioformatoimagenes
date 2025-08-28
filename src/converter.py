@@ -58,9 +58,7 @@ class TIFFConverter:
         if self.config_manager.is_format_enabled("METS"):
             met_metadata_config = self.config_manager.get_format_config("METS")
             # Agregar configuración del nivel superior para MET
-            met_metadata_config.update(
-                self.config_manager.config.get("METS", {})
-            )
+            met_metadata_config.update(self.config_manager.config.get("METS", {}))
             converters["METS"] = METMetadataConverter(met_metadata_config)
 
         output_manager.info(f"Conversores inicializados: {list(converters.keys())}")
@@ -90,7 +88,9 @@ class TIFFConverter:
             consolidated_pdf_config = self.config_manager.config.get(
                 "postconverters", {}
             ).get("consolidated_pdf", {})
-            postconverters["consolidated_pdf"] = ConsolidatedPDFPostconverter(consolidated_pdf_config)
+            postconverters["consolidated_pdf"] = ConsolidatedPDFPostconverter(
+                consolidated_pdf_config
+            )
 
         if postconverters:
             output_manager.info(
@@ -173,40 +173,45 @@ class TIFFConverter:
 
             for subfolder_name, tiff_folder in tiff_folders.items():
                 output_manager.section(f"📁 Procesando subcarpeta: {subfolder_name}")
-                
+
                 try:
                     # Crear estructura de salida para esta subcarpeta
-                    if not file_processor.create_output_structure_for_subfolder(subfolder_name, formats):
-                        error_report[subfolder_name] = [f"Error creando estructura de salida"]
+                    if not file_processor.create_output_structure_for_subfolder(
+                        subfolder_name, formats
+                    ):
+                        error_report[subfolder_name] = [
+                            f"Error creando estructura de salida"
+                        ]
                         continue
 
                     # Procesar archivos TIFF de esta subcarpeta
                     subfolder_result = self._process_subfolder(
-                        file_processor, 
-                        subfolder_name, 
-                        tiff_folder, 
-                        formats, 
-                        max_workers, 
-                        overwrite
+                        file_processor,
+                        subfolder_name,
+                        tiff_folder,
+                        formats,
+                        max_workers,
+                        overwrite,
                     )
-                    
+
                     subfolder_results[subfolder_name] = subfolder_result
-                    
+
                     # Ejecutar postconversores para esta subcarpeta
                     if subfolder_result.get("success") and self.postconverters:
                         self._run_postconverters_for_subfolder(
-                            subfolder_result, 
-                            output_dir, 
-                            subfolder_name,
-                            file_processor
+                            subfolder_result, output_dir, subfolder_name, file_processor
                         )
-                    
+
                     # Generar resumen de la subcarpeta
-                    summary = file_processor.get_summary_by_subfolder().get(subfolder_name, {})
+                    summary = file_processor.get_summary_by_subfolder().get(
+                        subfolder_name, {}
+                    )
                     output_manager.log_subfolder_summary(subfolder_name, summary)
-                    
+
                 except Exception as e:
-                    error_msg = f"Error procesando subcarpeta {subfolder_name}: {str(e)}"
+                    error_msg = (
+                        f"Error procesando subcarpeta {subfolder_name}: {str(e)}"
+                    )
                     output_manager.error(error_msg)
                     error_report[subfolder_name] = [error_msg]
                     continue
@@ -214,10 +219,7 @@ class TIFFConverter:
             # Generar reporte final
             time_elapsed = time.time() - start_time
             final_result = self._generate_final_result(
-                subfolder_results, 
-                error_report, 
-                time_elapsed,
-                file_processor
+                subfolder_results, error_report, time_elapsed, file_processor
             )
 
             # Log del reporte de errores si los hay
@@ -243,11 +245,11 @@ class TIFFConverter:
         tiff_folder: Path,
         formats: List[str],
         max_workers: int,
-        overwrite: bool
+        overwrite: bool,
     ) -> Dict[str, Any]:
         """
         Procesa una subcarpeta específica
-        
+
         Args:
             file_processor: Procesador de archivos
             subfolder_name: Nombre de la subcarpeta
@@ -255,7 +257,7 @@ class TIFFConverter:
             formats: Formatos a convertir
             max_workers: Número de workers
             overwrite: Si sobrescribir archivos
-            
+
         Returns:
             Resultado del procesamiento de la subcarpeta
         """
@@ -270,7 +272,9 @@ class TIFFConverter:
                 "conversions_failed": 0,
             }
 
-        output_manager.info(f"📄 Encontrados {len(tiff_files)} archivos TIFF en {subfolder_name}/TIFF/")
+        output_manager.info(
+            f"📄 Encontrados {len(tiff_files)} archivos TIFF en {subfolder_name}/TIFF/"
+        )
 
         # Estadísticas
         total_conversions = len(tiff_files) * len(formats)
@@ -305,38 +309,49 @@ class TIFFConverter:
                     # Convertir archivo
                     try:
                         success = converter.convert(tiff_file, output_path)
-                        
+
                         if success:
                             successful_conversions += 1
                             # Agregar resultado para postconversores
-                            file_processor.add_conversion_result(subfolder_name, {
-                                "input_file": str(tiff_file),
-                                "output_file": str(output_path),
-                                "format": format_name,
-                                "success": True,
-                                "subfolder": subfolder_name
-                            })
+                            file_processor.add_conversion_result(
+                                subfolder_name,
+                                {
+                                    "input_file": str(tiff_file),
+                                    "output_file": str(output_path),
+                                    "format": format_name,
+                                    "success": True,
+                                    "subfolder": subfolder_name,
+                                },
+                            )
                         else:
                             failed_conversions += 1
-                            file_processor.add_conversion_result(subfolder_name, {
+                            file_processor.add_conversion_result(
+                                subfolder_name,
+                                {
+                                    "input_file": str(tiff_file),
+                                    "output_file": str(output_path),
+                                    "format": format_name,
+                                    "success": False,
+                                    "subfolder": subfolder_name,
+                                },
+                            )
+
+                    except Exception as e:
+                        failed_conversions += 1
+                        output_manager.error(
+                            f"❌ Error convirtiendo {tiff_file.name} a {format_name}: {str(e)}"
+                        )
+                        file_processor.add_conversion_result(
+                            subfolder_name,
+                            {
                                 "input_file": str(tiff_file),
                                 "output_file": str(output_path),
                                 "format": format_name,
                                 "success": False,
-                                "subfolder": subfolder_name
-                            })
-                        
-                    except Exception as e:
-                        failed_conversions += 1
-                        output_manager.error(f"❌ Error convirtiendo {tiff_file.name} a {format_name}: {str(e)}")
-                        file_processor.add_conversion_result(subfolder_name, {
-                            "input_file": str(tiff_file),
-                            "output_file": str(output_path),
-                            "format": format_name,
-                            "success": False,
-                            "error": str(e),
-                            "subfolder": subfolder_name
-                        })
+                                "error": str(e),
+                                "subfolder": subfolder_name,
+                            },
+                        )
 
                     pbar.update(1)
 
@@ -346,7 +361,7 @@ class TIFFConverter:
             "conversions_successful": successful_conversions,
             "conversions_failed": failed_conversions,
             "formats_processed": formats,
-            "subfolder": subfolder_name
+            "subfolder": subfolder_name,
         }
 
     def _run_postconverters_for_subfolder(
@@ -354,11 +369,11 @@ class TIFFConverter:
         subfolder_result: Dict[str, Any],
         output_dir: str,
         subfolder_name: str,
-        file_processor: FileProcessor
+        file_processor: FileProcessor,
     ):
         """
         Ejecuta los postconversores para una subcarpeta específica
-        
+
         Args:
             subfolder_result: Resultado del procesamiento de la subcarpeta
             output_dir: Directorio de salida
@@ -366,47 +381,59 @@ class TIFFConverter:
             file_processor: Procesador de archivos
         """
         output_manager.info(f"🔄 Ejecutando postconversores para {subfolder_name}...")
-        
+
         # Debug temporal: verificar el estado del file_processor
         conversion_results = file_processor.get_conversion_results()
-        output_manager.info(f"Debug - file_processor.get_conversion_results(): {conversion_results}")
-        
+        output_manager.info(
+            f"Debug - file_processor.get_conversion_results(): {conversion_results}"
+        )
+
         for postconverter_name, postconverter in self.postconverters.items():
             try:
                 # Crear resultado específico para esta subcarpeta
                 subfolder_conversion_result = {
                     "success": True,
-                    "files_info": file_processor.get_conversion_results().get(subfolder_name, []),
-                    "subfolder": subfolder_name
+                    "files_info": file_processor.get_conversion_results().get(
+                        subfolder_name, []
+                    ),
+                    "subfolder": subfolder_name,
                 }
-                
+
                 # Ejecutar postconversor
-                success = postconverter.process(subfolder_conversion_result, Path(output_dir))
-                
+                success = postconverter.process(
+                    subfolder_conversion_result, Path(output_dir)
+                )
+
                 if success:
-                    output_manager.success(f"✅ Postconversor {postconverter_name} completado para {subfolder_name}")
+                    output_manager.success(
+                        f"✅ Postconversor {postconverter_name} completado para {subfolder_name}"
+                    )
                 else:
-                    output_manager.error(f"❌ Postconversor {postconverter_name} falló para {subfolder_name}")
-                    
+                    output_manager.error(
+                        f"❌ Postconversor {postconverter_name} falló para {subfolder_name}"
+                    )
+
             except Exception as e:
-                output_manager.error(f"❌ Error en postconversor {postconverter_name} para {subfolder_name}: {str(e)}")
+                output_manager.error(
+                    f"❌ Error en postconversor {postconverter_name} para {subfolder_name}: {str(e)}"
+                )
 
     def _generate_final_result(
         self,
         subfolder_results: Dict[str, Dict],
         error_report: Dict[str, List[str]],
         time_elapsed: float,
-        file_processor: FileProcessor
+        file_processor: FileProcessor,
     ) -> Dict[str, Any]:
         """
         Genera el resultado final de la conversión
-        
+
         Args:
             subfolder_results: Resultados por subcarpeta
             error_report: Reporte de errores
             time_elapsed: Tiempo transcurrido
             file_processor: Procesador de archivos
-            
+
         Returns:
             Resultado final consolidado
         """
@@ -414,10 +441,16 @@ class TIFFConverter:
         total_subfolders = len(subfolder_results) + len(error_report)
         successful_subfolders = len(subfolder_results)
         failed_subfolders = len([k for k, v in error_report.items() if v])
-        
-        total_files = sum(r.get("files_processed", 0) for r in subfolder_results.values())
-        total_conversions = sum(r.get("conversions_successful", 0) for r in subfolder_results.values())
-        total_failures = sum(r.get("conversions_failed", 0) for r in subfolder_results.values())
+
+        total_files = sum(
+            r.get("files_processed", 0) for r in subfolder_results.values()
+        )
+        total_conversions = sum(
+            r.get("conversions_successful", 0) for r in subfolder_results.values()
+        )
+        total_failures = sum(
+            r.get("conversions_failed", 0) for r in subfolder_results.values()
+        )
 
         # Generar resumen por subcarpeta
         summary_by_subfolder = file_processor.get_summary_by_subfolder()
@@ -433,20 +466,24 @@ class TIFFConverter:
             "time_elapsed": time_elapsed,
             "subfolder_results": subfolder_results,
             "error_report": error_report,
-            "summary_by_subfolder": summary_by_subfolder
+            "summary_by_subfolder": summary_by_subfolder,
         }
 
         # Mostrar resumen final
         output_manager.section("📊 RESUMEN FINAL DE CONVERSIÓN")
         output_manager.separator()
-        output_manager.format_info("📁 Subcarpetas procesadas", f"{successful_subfolders}/{total_subfolders}")
+        output_manager.format_info(
+            "📁 Subcarpetas procesadas", f"{successful_subfolders}/{total_subfolders}"
+        )
         output_manager.format_info("📄 Archivos totales", total_files)
         output_manager.format_info("✅ Conversiones exitosas", total_conversions)
         output_manager.format_info("❌ Conversiones fallidas", total_failures)
         output_manager.format_info("⏱️  Tiempo total", f"{time_elapsed:.2f} segundos")
 
         if error_report:
-            output_manager.warning(f"⚠️  {failed_subfolders} subcarpetas tuvieron errores")
+            output_manager.warning(
+                f"⚠️  {failed_subfolders} subcarpetas tuvieron errores"
+            )
             output_manager.info("📋 Revisa el archivo de log para detalles completos")
 
         return result
@@ -464,7 +501,7 @@ class TIFFConverter:
         if format_name in self.converters:
             converter = self.converters[format_name]
             info = converter.get_converter_info()
-            
+
             # Agregar información específica del formato
             if format_name == "JPGHIGH":
                 info.update({"dpi": 400, "quality": converter.quality})
@@ -472,7 +509,7 @@ class TIFFConverter:
                 info.update({"dpi": 200, "quality": converter.quality})
             elif format_name == "PDF":
                 info.update({"ocr_language": converter.ocr_language})
-            
+
             return info
         return None
 

@@ -24,7 +24,7 @@ class OutputManager:
     def enable_file_logging(self, output_dir: str, subfolder_name: str = None):
         """
         Habilita el logging a archivo
-        
+
         Args:
             output_dir: Directorio de salida
             subfolder_name: Nombre de la subcarpeta (opcional)
@@ -33,18 +33,18 @@ class OutputManager:
             # Crear directorio de logs si no existe
             log_dir = Path(output_dir) / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Generar nombre del archivo de log
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             if subfolder_name:
                 log_filename = f"conversion_{subfolder_name}_{timestamp}.log"
             else:
                 log_filename = f"conversion_{timestamp}.log"
-            
+
             log_path = log_dir / log_filename
-            self.log_file = open(log_path, 'w', encoding='utf-8')
+            self.log_file = open(log_path, "w", encoding="utf-8")
             self.log_enabled = True
-            
+
             # Escribir encabezado del log
             self._write_to_log(f"=== LOG DE CONVERSIÓN TIFF ===")
             self._write_to_log(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -52,7 +52,7 @@ class OutputManager:
                 self._write_to_log(f"Subcarpeta: {subfolder_name}")
             self._write_to_log(f"Archivo de log: {log_path}")
             self._write_to_log("=" * 50)
-            
+
         except Exception as e:
             print(f"❌ Error habilitando logging a archivo: {str(e)}")
             self.log_enabled = False
@@ -89,11 +89,11 @@ class OutputManager:
         """
         # Siempre escribir al log
         self._write_to_log(message)
-        
+
         # En modo no-verbose, solo mostrar mensajes importantes en pantalla
         if not self.verbose_mode and not self._is_important_message(message):
             return
-        
+
         if position == 0 and self.main_pbar:
             # Escribir arriba de la barra principal
             self.main_pbar.write(message)
@@ -107,12 +107,27 @@ class OutputManager:
     def _is_important_message(self, message: str) -> bool:
         """Determina si un mensaje es importante para mostrar en pantalla"""
         important_keywords = [
-            "✅", "❌", "⚠️", "🚀", "📁", "📂", "📊", "🎯", "🔧", "⚙️",
-            "Error:", "Error en", "Éxito", "Completado", "Falló",
-            "Carpeta TIFF encontrada", "Estructura creada",
-            "Archivos MET generados", "Conversión completada"
+            "✅",
+            "❌",
+            "⚠️",
+            "🚀",
+            "📁",
+            "📂",
+            "📊",
+            "🎯",
+            "🔧",
+            "⚙️",
+            "Error:",
+            "Error en",
+            "Éxito",
+            "Completado",
+            "Falló",
+            "Carpeta TIFF encontrada",
+            "Estructura creada",
+            "Archivos MET generados",
+            "Conversión completada",
         ]
-        
+
         return any(keyword in message for keyword in important_keywords)
 
     def info(self, message: str):
@@ -153,31 +168,33 @@ class OutputManager:
     def log_subfolder_summary(self, subfolder_name: str, summary: Dict[str, Any]):
         """
         Escribe un resumen de subcarpeta al log
-        
+
         Args:
             subfolder_name: Nombre de la subcarpeta
             summary: Resumen de conversiones
         """
         if not self.log_enabled:
             return
-            
+
         self._write_to_log(f"\n=== RESUMEN SUBCARPETA: {subfolder_name} ===")
         self._write_to_log(f"Archivos totales: {summary.get('total_files', 0)}")
         self._write_to_log(f"Conversiones exitosas: {summary.get('successful', 0)}")
         self._write_to_log(f"Conversiones fallidas: {summary.get('failed', 0)}")
-        self._write_to_log(f"Formatos procesados: {', '.join(summary.get('formats_processed', []))}")
+        self._write_to_log(
+            f"Formatos procesados: {', '.join(summary.get('formats_processed', []))}"
+        )
         self._write_to_log("=" * 50)
 
     def log_error_report(self, error_report: Dict[str, List[str]]):
         """
         Escribe un reporte de errores al log
-        
+
         Args:
             error_report: Diccionario con errores por subcarpeta
         """
         if not self.log_enabled:
             return
-            
+
         self._write_to_log(f"\n=== REPORTE DE ERRORES ===")
         for subfolder_name, errors in error_report.items():
             if errors:
@@ -195,7 +212,9 @@ class OutputManager:
         if self.log_file:
             try:
                 self._write_to_log(f"\n=== FIN DEL LOG ===")
-                self._write_to_log(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                self._write_to_log(
+                    f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                )
                 self.log_file.close()
             except Exception:
                 pass

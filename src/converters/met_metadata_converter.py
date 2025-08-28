@@ -199,11 +199,12 @@ class METMetadataConverter(BaseConverter):
     def _indent_xml_tree(self, tree: ET.ElementTree, space: str = "  ") -> None:
         """
         Indenta un árbol XML de forma compatible con Python 3.8
-        
+
         Args:
             tree: Árbol XML a indentar
             space: Espacio de indentación
         """
+
         def _indent(elem, level=0):
             i = "\n" + level * space
             if len(elem):
@@ -218,7 +219,7 @@ class METMetadataConverter(BaseConverter):
             else:
                 if level and (not elem.tail or not elem.tail.strip()):
                     elem.tail = i
-        
+
         _indent(tree.getroot())
 
     def _add_image_metadata(self, file_elem: ET.Element, input_path: Path) -> None:

@@ -53,27 +53,37 @@ class METFormatPostConverter(BasePostConverter):
 
             # Obtener el nombre de la subcarpeta
             subfolder_name = conversion_result.get("subfolder", "unknown")
-            
+
             # Preparar los resultados para los archivos MET por formato
             conversion_results = self._prepare_conversion_results(conversion_result)
 
             # Generar archivos MET por formato para esta subcarpeta
             results = self._create_format_specific_met_for_subfolder(
-                conversion_results, 
-                output_dir, 
-                subfolder_name
+                conversion_results, output_dir, subfolder_name
             )
 
             # Mostrar resumen de generación
-            successful_formats = [fmt for fmt, success in results.items() if success and fmt != "original_tiff_mets"]
-            failed_formats = [fmt for fmt, success in results.items() if not success and fmt != "original_tiff_mets"]
-            
+            successful_formats = [
+                fmt
+                for fmt, success in results.items()
+                if success and fmt != "original_tiff_mets"
+            ]
+            failed_formats = [
+                fmt
+                for fmt, success in results.items()
+                if not success and fmt != "original_tiff_mets"
+            ]
+
             # Verificar si se generó el METS del TIFF original
             original_tiff_success = results.get("original_tiff_mets", False)
             if original_tiff_success:
-                output_manager.success(f"Archivo METS del TIFF original generado para {subfolder_name}")
+                output_manager.success(
+                    f"Archivo METS del TIFF original generado para {subfolder_name}"
+                )
             else:
-                output_manager.error(f"Error generando archivo METS del TIFF original para {subfolder_name}")
+                output_manager.error(
+                    f"Error generando archivo METS del TIFF original para {subfolder_name}"
+                )
 
             if successful_formats:
                 output_manager.success(
@@ -103,7 +113,6 @@ class METFormatPostConverter(BasePostConverter):
             Lista de resultados preparados
         """
 
-        
         conversion_results = []
 
         for file_info in conversion_result.get("files_info", []):
@@ -114,11 +123,7 @@ class METFormatPostConverter(BasePostConverter):
             if file_info.get("success", False):
                 output_path = Path(file_info["output_file"])
                 try:
-                    size = (
-                        output_path.stat().st_size
-                        if output_path.exists()
-                        else 0
-                    )
+                    size = output_path.stat().st_size if output_path.exists() else 0
                 except (OSError, FileNotFoundError):
                     size = 0
                 output_files.append(
@@ -181,14 +186,20 @@ class METFormatPostConverter(BasePostConverter):
 
         # Generar archivo METS del TIFF original
         try:
-            success = self._create_original_tiff_mets_file(conversion_results, output_dir)
+            success = self._create_original_tiff_mets_file(
+                conversion_results, output_dir
+            )
             results["original_tiff_mets"] = success
             if success:
-                output_manager.success("Archivo METS del TIFF original generado exitosamente")
+                output_manager.success(
+                    "Archivo METS del TIFF original generado exitosamente"
+                )
             else:
                 output_manager.warning("Error generando archivo METS del TIFF original")
         except Exception as e:
-            output_manager.error(f"Error generando archivo METS del TIFF original: {str(e)}")
+            output_manager.error(
+                f"Error generando archivo METS del TIFF original: {str(e)}"
+            )
             results["original_tiff_mets"] = False
 
         # Generar archivo MET para cada formato
@@ -207,59 +218,62 @@ class METFormatPostConverter(BasePostConverter):
         return results
 
     def _create_format_specific_met_for_subfolder(
-        self, 
-        conversion_results: List[Dict[str, Any]], 
-        output_dir: Path, 
-        subfolder_name: str
+        self,
+        conversion_results: List[Dict[str, Any]],
+        output_dir: Path,
+        subfolder_name: str,
     ) -> Dict[str, bool]:
         """
         Crea archivos MET por formato para una subcarpeta específica
-        
+
         Args:
             conversion_results: Lista de resultados de conversión
             output_dir: Directorio de salida raíz
             subfolder_name: Nombre de la subcarpeta
-            
+
         Returns:
             Diccionario con el resultado de cada formato
         """
         results = {}
-        
+
         try:
             # Crear directorio de la subcarpeta en la salida
             subfolder_output_dir = output_dir / subfolder_name
             subfolder_output_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Generar archivos MET por formato
             for format_name in ["JPGHIGH", "JPGLOW", "PDF"]:
                 if self._has_files_for_format(conversion_results, format_name):
                     success = self._create_format_met_file(
-                        conversion_results, 
-                        subfolder_output_dir, 
-                        format_name, 
-                        subfolder_name
+                        conversion_results,
+                        subfolder_output_dir,
+                        format_name,
+                        subfolder_name,
                     )
                     results[format_name] = success
                 else:
                     results[format_name] = False
-            
+
             # Generar archivo METS del TIFF original para esta subcarpeta
             original_tiff_success = self._create_original_tiff_mets_file(
-                conversion_results, 
-                subfolder_output_dir
+                conversion_results, subfolder_output_dir
             )
             results["original_tiff_mets"] = original_tiff_success
-            
+
         except Exception as e:
-            output_manager.error(f"Error generando archivos MET para subcarpeta {subfolder_name}: {str(e)}")
+            output_manager.error(
+                f"Error generando archivos MET para subcarpeta {subfolder_name}: {str(e)}"
+            )
             # Marcar todos como fallidos
             for format_name in ["JPGHIGH", "JPGLOW", "PDF"]:
                 results[format_name] = False
             results["original_tiff_mets"] = False
-        
+
         return results
 
-    def _has_files_for_format(self, conversion_results: List[Dict[str, Any]], format_name: str) -> bool:
+    def _has_files_for_format(
+        self, conversion_results: List[Dict[str, Any]], format_name: str
+    ) -> bool:
         """Verifica si hay archivos para un formato específico"""
         for result in conversion_results:
             if result.get("success", False):
@@ -269,21 +283,21 @@ class METFormatPostConverter(BasePostConverter):
         return False
 
     def _create_format_met_file(
-        self, 
-        conversion_results: List[Dict[str, Any]], 
-        subfolder_output_dir: Path, 
+        self,
+        conversion_results: List[Dict[str, Any]],
+        subfolder_output_dir: Path,
         format_name: str,
-        subfolder_name: str
+        subfolder_name: str,
     ) -> bool:
         """
         Crea un archivo MET para un formato específico en una subcarpeta
-        
+
         Args:
             conversion_results: Lista de resultados de conversión
             subfolder_output_dir: Directorio de salida de la subcarpeta
             format_name: Nombre del formato
             subfolder_name: Nombre de la subcarpeta
-            
+
         Returns:
             True si se creó exitosamente
         """
@@ -294,62 +308,64 @@ class METFormatPostConverter(BasePostConverter):
                 if result.get("success", False):
                     for output_file in result.get("output_files", []):
                         if output_file.get("format") == format_name:
-                            format_results.append({
-                                "input_file": result["input_file"],
-                                "output_file": output_file
-                            })
-            
+                            format_results.append(
+                                {
+                                    "input_file": result["input_file"],
+                                    "output_file": output_file,
+                                }
+                            )
+
             if not format_results:
                 return False
-            
+
             # Crear directorio METS si no existe
             mets_dir = subfolder_output_dir / "METS"
             mets_dir.mkdir(exist_ok=True)
-            
+
             # Crear archivo MET para este formato en la carpeta METS
             met_file_path = mets_dir / f"{format_name}.xml"
-            
+
             # Generar contenido XML
             xml_content = self._generate_format_met_xml(
-                format_results, 
-                format_name, 
-                subfolder_name
+                format_results, format_name, subfolder_name
             )
-            
+
             # Escribir archivo
-            with open(met_file_path, 'w', encoding='utf-8') as f:
+            with open(met_file_path, "w", encoding="utf-8") as f:
                 f.write(xml_content)
-            
-            output_manager.success(f"Archivo MET generado: {subfolder_name}/METS/{format_name}.xml")
+
+            output_manager.success(
+                f"Archivo MET generado: {subfolder_name}/METS/{format_name}.xml"
+            )
             return True
-            
+
         except Exception as e:
-            output_manager.error(f"Error generando archivo MET para {format_name} en {subfolder_name}: {str(e)}")
+            output_manager.error(
+                f"Error generando archivo MET para {format_name} en {subfolder_name}: {str(e)}"
+            )
             return False
 
-
-
     def _generate_format_met_xml(
-        self, 
-        format_results: List[Dict[str, Any]], 
+        self,
+        format_results: List[Dict[str, Any]],
         format_name: str,
-        subfolder_name: str
+        subfolder_name: str,
     ) -> str:
         """
         Genera el contenido XML para un archivo MET de formato específico
-        
+
         Args:
             format_results: Resultados del formato específico
             format_name: Nombre del formato
             subfolder_name: Nombre de la subcarpeta
-            
+
         Returns:
             Contenido XML generado
         """
         # Implementar generación de XML específico para el formato
         # Este es un placeholder - se debe implementar la lógica completa
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+
         xml_content = f"""<?xml version='1.0' encoding='utf-8'?>
 <mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink">
   <objid>MET_{format_name}_{subfolder_name}_{timestamp}</objid>
@@ -367,28 +383,26 @@ class METFormatPostConverter(BasePostConverter):
     </fileGrp>
   </fileSec>
 </mets>"""
-        
+
         return xml_content
 
     def _generate_original_tiff_mets_xml(
-        self, 
-        conversion_results: List[Dict[str, Any]], 
-        subfolder_name: str
+        self, conversion_results: List[Dict[str, Any]], subfolder_name: str
     ) -> str:
         """
         Genera el contenido XML para el archivo METS del TIFF original
-        
+
         Args:
             conversion_results: Lista de resultados de conversión
             subfolder_name: Nombre de la subcarpeta
-            
+
         Returns:
             Contenido XML generado
         """
         # Implementar generación de XML del METS del TIFF original
         # Este es un placeholder - se debe implementar la lógica completa
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+
         xml_content = f"""<?xml version='1.0' encoding='utf-8'?>
 <mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink">
   <objid>METS_{subfolder_name}_TIFF_{timestamp}</objid>
@@ -406,7 +420,7 @@ class METFormatPostConverter(BasePostConverter):
     </fileGrp>
   </fileSec>
 </mets>"""
-        
+
         return xml_content
 
     def _create_single_format_met_file(
@@ -647,7 +661,9 @@ class METFormatPostConverter(BasePostConverter):
             )
             return False
 
-    def _create_original_tiff_mets_file(self, conversion_results: List[Dict[str, Any]], output_dir: Path) -> bool:
+    def _create_original_tiff_mets_file(
+        self, conversion_results: List[Dict[str, Any]], output_dir: Path
+    ) -> bool:
         """
         Crea un archivo METS único para el TIFF original
 
@@ -659,8 +675,12 @@ class METFormatPostConverter(BasePostConverter):
             True si se creó correctamente
         """
         try:
-            output_manager.info(f"Debug - Iniciando creación de archivo METS del TIFF original")
-            output_manager.info(f"Debug - Número de archivos de entrada: {len(conversion_results)}")
+            output_manager.info(
+                f"Debug - Iniciando creación de archivo METS del TIFF original"
+            )
+            output_manager.info(
+                f"Debug - Número de archivos de entrada: {len(conversion_results)}"
+            )
 
             # Crear elemento raíz METS
             root = ET.Element("mets")
@@ -674,9 +694,7 @@ class METFormatPostConverter(BasePostConverter):
 
             # Agregar información del objeto
             objid = ET.SubElement(root, "objid")
-            objid.text = (
-                f"MET_ORIGINAL_TIFF_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            )
+            objid.text = f"MET_ORIGINAL_TIFF_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
             # Agregar información del agente
             agent = ET.SubElement(root, "agent")
@@ -829,7 +847,9 @@ class METFormatPostConverter(BasePostConverter):
 
             return True
         except Exception as e:
-            output_manager.error(f"Error generando archivo METS del TIFF original: {str(e)}")
+            output_manager.error(
+                f"Error generando archivo METS del TIFF original: {str(e)}"
+            )
             return False
 
     def _add_file_metadata(self, file_elem: ET.Element, input_path: Path) -> None:
@@ -1006,11 +1026,12 @@ class METFormatPostConverter(BasePostConverter):
     def _indent_xml_tree(self, tree: ET.ElementTree, space: str = "  ") -> None:
         """
         Indenta un árbol XML de forma compatible con Python 3.8
-        
+
         Args:
             tree: Árbol XML a indentar
             space: Espacio de indentación
         """
+
         def _indent(elem, level=0):
             i = "\n" + level * space
             if len(elem):
@@ -1025,7 +1046,7 @@ class METFormatPostConverter(BasePostConverter):
             else:
                 if level and (not elem.tail or not elem.tail.strip()):
                     elem.tail = i
-        
+
         _indent(tree.getroot())
 
     def _get_mime_type(self, format_type: str) -> str:

@@ -11,6 +11,6 @@ from .consolidated_pdf_postconverter import ConsolidatedPDFPostconverter
 
 __all__ = [
     "BasePostConverter",
-    "METFormatPostConverter", 
-    "ConsolidatedPDFPostconverter"
+    "METFormatPostConverter",
+    "ConsolidatedPDFPostconverter",
 ]

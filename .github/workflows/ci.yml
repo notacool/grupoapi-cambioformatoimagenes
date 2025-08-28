@@ -43,10 +43,7 @@ jobs:
 
     - name: Ejecutar tests básicos
       run: |
-        python -c "from src.converter import TIFFConverter; print('✅ TIFFConverter importado correctamente')"
-        python -c "from src.config_manager import ConfigManager; print('✅ ConfigManager importado correctamente')"
-        python -c "from src.file_processor import FileProcessor; print('✅ FileProcessor importado correctamente')"
-        python -c "from src.converters import JPGResolutionConverter, PDFEasyOCRConverter, METMetadataConverter; print('✅ Converters importados correctamente')"
+        python test_basic.py
 
     - name: Ejecutar tests completos (si existen)
       run: |
