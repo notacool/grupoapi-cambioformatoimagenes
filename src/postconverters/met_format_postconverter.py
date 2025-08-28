@@ -327,44 +327,7 @@ class METFormatPostConverter(BasePostConverter):
             output_manager.error(f"Error generando archivo MET para {format_name} en {subfolder_name}: {str(e)}")
             return False
 
-    def _create_original_tiff_mets_file(
-        self, 
-        conversion_results: List[Dict[str, Any]], 
-        output_dir: Path
-    ) -> bool:
-        """
-        Crea un archivo METS del TIFF original para una subcarpeta específica
-        
-        Args:
-            conversion_results: Lista de resultados de conversión
-            subfolder_output_dir: Directorio de salida de la subcarpeta
-            subfolder_name: Nombre de la subcarpeta
-            
-        Returns:
-            True si se creó exitosamente
-        """
-        try:
-            # Crear directorio METS si no existe
-            mets_dir = subfolder_output_dir / "METS"
-            mets_dir.mkdir(exist_ok=True)
-            
-            # Generar contenido XML del METS del TIFF original
-            xml_content = self._generate_original_tiff_mets_xml(
-                conversion_results, 
-                subfolder_name
-            )
-            
-            # Escribir archivo
-            met_file_path = mets_dir / f"{subfolder_name}_TIFF.xml"
-            with open(met_file_path, 'w', encoding='utf-8') as f:
-                f.write(xml_content)
-            
-            output_manager.success(f"Archivo METS del TIFF original generado: {subfolder_name}/METS/{subfolder_name}_TIFF.xml")
-            return True
-            
-        except Exception as e:
-            output_manager.error(f"Error generando archivo METS del TIFF original para {subfolder_name}: {str(e)}")
-            return False
+
 
     def _generate_format_met_xml(
         self, 
@@ -671,7 +634,7 @@ class METFormatPostConverter(BasePostConverter):
 
             tree = ET.ElementTree(root)
             output_manager.info(f"Debug - Árbol XML creado")
-            ET.indent(tree, space="  ", level=0)
+            self._indent_xml_tree(tree)
             output_manager.info(f"Debug - XML indentado")
             tree.write(output_path, encoding="utf-8", xml_declaration=True)
             output_manager.info(f"Debug - Archivo XML escrito exitosamente")
@@ -859,7 +822,7 @@ class METFormatPostConverter(BasePostConverter):
 
             tree = ET.ElementTree(root)
             output_manager.info(f"Debug - Árbol XML creado")
-            ET.indent(tree, space="  ", level=0)
+            self._indent_xml_tree(tree)
             output_manager.info(f"Debug - XML indentado")
             tree.write(output_path, encoding="utf-8", xml_declaration=True)
             output_manager.info(f"Debug - Archivo XML escrito exitosamente")
@@ -1039,6 +1002,31 @@ class METFormatPostConverter(BasePostConverter):
         except Exception as e:
             output_manager.error(f"Error obteniendo metadatos de imagen: {str(e)}")
             output_manager.error(f"Tipo de error: {type(e)}")
+
+    def _indent_xml_tree(self, tree: ET.ElementTree, space: str = "  ") -> None:
+        """
+        Indenta un árbol XML de forma compatible con Python 3.8
+        
+        Args:
+            tree: Árbol XML a indentar
+            space: Espacio de indentación
+        """
+        def _indent(elem, level=0):
+            i = "\n" + level * space
+            if len(elem):
+                if not elem.text or not elem.text.strip():
+                    elem.text = i + space
+                if not elem.tail or not elem.tail.strip():
+                    elem.tail = i
+                for subelem in elem:
+                    _indent(subelem, level + 1)
+                if not elem.tail or not elem.tail.strip():
+                    elem.tail = i
+            else:
+                if level and (not elem.tail or not elem.tail.strip()):
+                    elem.tail = i
+        
+        _indent(tree.getroot())
 
     def _get_mime_type(self, format_type: str) -> str:
         """

@@ -187,7 +187,7 @@ class METMetadataConverter(BaseConverter):
 
             # Crear y guardar el archivo XML
             tree = ET.ElementTree(root)
-            ET.indent(tree, space="  ", level=0)
+            self._indent_xml_tree(tree)
             tree.write(output_path, encoding="utf-8", xml_declaration=True)
 
             return True
@@ -195,6 +195,31 @@ class METMetadataConverter(BaseConverter):
         except Exception as e:
             output_manager.error(f"Error creando archivo MET: {str(e)}")
             return False
+
+    def _indent_xml_tree(self, tree: ET.ElementTree, space: str = "  ") -> None:
+        """
+        Indenta un árbol XML de forma compatible con Python 3.8
+        
+        Args:
+            tree: Árbol XML a indentar
+            space: Espacio de indentación
+        """
+        def _indent(elem, level=0):
+            i = "\n" + level * space
+            if len(elem):
+                if not elem.text or not elem.text.strip():
+                    elem.text = i + space
+                if not elem.tail or not elem.tail.strip():
+                    elem.tail = i
+                for subelem in elem:
+                    _indent(subelem, level + 1)
+                if not elem.tail or not elem.tail.strip():
+                    elem.tail = i
+            else:
+                if level and (not elem.tail or not elem.tail.strip()):
+                    elem.tail = i
+        
+        _indent(tree.getroot())
 
     def _add_image_metadata(self, file_elem: ET.Element, input_path: Path) -> None:
         """
@@ -604,7 +629,7 @@ class METMetadataConverter(BaseConverter):
             output_path = output_dir / filename
 
             tree = ET.ElementTree(root)
-            ET.indent(tree, space="  ", level=0)
+            self._indent_xml_tree(tree)
             tree.write(output_path, encoding="utf-8", xml_declaration=True)
 
             return True
@@ -748,7 +773,7 @@ class METMetadataConverter(BaseConverter):
             output_path = output_dir / filename
 
             tree = ET.ElementTree(root)
-            ET.indent(tree, space="  ", level=0)
+            self._indent_xml_tree(tree)
             tree.write(output_path, encoding="utf-8", xml_declaration=True)
 
             return True

@@ -30,7 +30,7 @@ reports=yes
 max-line-length=120
 
 # Máximo número de caracteres en una línea de docstring
-docstring-max-length=120
+# docstring-max-length=120  # Opción no reconocida en versiones anteriores de Pylint
 
 [BASIC]
 # Nombres de variables válidos
@@ -44,7 +44,7 @@ bad-names=foo,bar,baz,toto,tutu,tata
 min-similarity-lines=4
 
 # Número mínimo de tokens similares para reportar
-min-similarity-tokens=50
+# min-similarity-tokens=50  # Opción no reconocida en versiones anteriores de Pylint
 
 [TYPECHECK]
 # Lista de módulos donde los miembros pueden ser dinámicos

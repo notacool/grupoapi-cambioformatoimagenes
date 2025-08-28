@@ -455,6 +455,10 @@ class TIFFConverter:
         """Retorna la lista de formatos disponibles"""
         return list(self.converters.keys())
 
+    def get_available_postconverters(self) -> List[str]:
+        """Retorna la lista de postconversores disponibles"""
+        return list(self.postconverters.keys())
+
     def get_converter_info(self, format_name: str) -> Optional[Dict[str, Any]]:
         """Retorna información de un conversor específico"""
         if format_name in self.converters:
