@@ -4,7 +4,7 @@ Procesador de archivos para el conversor TIFF
 
 import os
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 from .output_manager import output_manager
 

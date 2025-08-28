@@ -17,8 +17,7 @@ from .converters import (
 )
 from .file_processor import FileProcessor
 from .output_manager import output_manager
-from .postconverters import METFormatPostConverter
-from .postconverters import ConsolidatedPDFPostconverter
+from .postconverters import ConsolidatedPDFPostconverter, METFormatPostConverter
 
 
 class TIFFConverter:

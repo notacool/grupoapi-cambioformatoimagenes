@@ -9,15 +9,15 @@ Este postconversor:
 - Aplica nombres con _numero para múltiples archivos
 """
 
+import logging
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-import logging
+from typing import Any, Dict, List, Optional
 
-from src.postconverters.base import BasePostConverter
-from src.output_manager import output_manager
 from src.converters.pdf_easyocr_converter import PDFEasyOCRConverter
+from src.output_manager import output_manager
+from src.postconverters.base import BasePostConverter
 
 
 class ConsolidatedPDFPostconverter(BasePostConverter):

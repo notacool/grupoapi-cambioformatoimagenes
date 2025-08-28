@@ -5,7 +5,7 @@ Gestor de salida usando tqdm para mantener la barra de progreso siempre abajo
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 from tqdm import tqdm
 

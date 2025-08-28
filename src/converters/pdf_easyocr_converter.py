@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Tuple
 import easyocr
 import numpy as np
 from PIL import Image
-
 from reportlab.pdfgen import canvas as reportlab_canvas
 
 from ..output_manager import output_manager

@@ -6,8 +6,8 @@ tareas adicionales como generación de metadatos METS y consolidación de PDFs.
 """
 
 from .base import BasePostConverter
-from .met_format_postconverter import METFormatPostConverter
 from .consolidated_pdf_postconverter import ConsolidatedPDFPostconverter
+from .met_format_postconverter import METFormatPostConverter
 
 __all__ = [
     "BasePostConverter",
