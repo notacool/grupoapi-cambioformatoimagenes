@@ -54,6 +54,14 @@ METS:
 
 # Configuración de postconversores
 postconverters:
+  # Postconversor para consolidar PDFs
+  consolidated_pdf:
+    enabled: true                    # Habilitar consolidación de PDFs
+    max_size_mb: 10                 # Tamaño máximo por PDF en MB
+    output_folder: "PDF"             # Carpeta de salida (misma que PDF individual)
+    use_ocr: true                   # Aplicar OCR a las imágenes
+    sort_by_name: true              # Ordenar archivos por nombre alfabético
+  
   # Postconversor MET por formato
   met_format:
     enabled: true                    # Habilitar generación de archivos MET por formato
@@ -72,3 +80,4 @@ postconverters:
 # - JPGHIGH y JPGLOW crean versiones de alta y media resolución respectivamente
 # - PDF está habilitado como única opción de OCR
 # - Tesseract y Azure OCR están deshabilitados
+# - El postconversor consolidated_pdf se ejecuta ANTES que met_format

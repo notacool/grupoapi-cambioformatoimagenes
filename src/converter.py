@@ -18,6 +18,7 @@ from .converters import (
 from .file_processor import FileProcessor
 from .output_manager import output_manager
 from .postconverters import METFormatPostConverter
+from .postconverters import ConsolidatedPDFPostconverter
 
 
 class TIFFConverter:
@@ -79,6 +80,17 @@ class TIFFConverter:
                 "postconverters", {}
             ).get("met_format", {})
             postconverters["met_format"] = METFormatPostConverter(met_format_config)
+
+        # Consolidated PDF PostConverter
+        if (
+            self.config_manager.config.get("postconverters", {})
+            .get("consolidated_pdf", {})
+            .get("enabled", False)
+        ):
+            consolidated_pdf_config = self.config_manager.config.get(
+                "postconverters", {}
+            ).get("consolidated_pdf", {})
+            postconverters["consolidated_pdf"] = ConsolidatedPDFPostconverter(consolidated_pdf_config)
 
         if postconverters:
             output_manager.info(

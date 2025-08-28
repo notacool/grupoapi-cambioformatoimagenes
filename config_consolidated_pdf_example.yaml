@@ -1,0 +1,45 @@
+# Ejemplo de configuración para el postconversor de PDF consolidado
+# Este archivo muestra cómo configurar la consolidación de PDFs
+
+# Configuración de formatos de salida
+formats:
+  JPGHIGH:
+    enabled: true
+    quality: 95
+    dpi: 400
+  
+  JPGLOW:
+    enabled: true
+    quality: 90
+    dpi: 200
+  
+  PDF:
+    enabled: true
+    resolution: 300
+    ocr_language: ["es", "en"]
+    create_searchable_pdf: true
+
+# Configuración de postconversores
+postconverters:
+  # Postconversor para consolidar PDFs (SE EJECUTA PRIMERO)
+  consolidated_pdf:
+    enabled: true                    # ✅ HABILITAR consolidación
+    max_size_mb: 15                 # 📏 Tamaño máximo por PDF (15 MB)
+    output_folder: "PDF"             # 📁 Carpeta de salida
+    use_ocr: true                   # 🔍 Aplicar OCR
+    sort_by_name: true              # 📋 Ordenar por nombre alfabético
+  
+  # Postconversor MET por formato (SE EJECUTA DESPUÉS)
+  met_format:
+    enabled: true
+    include_image_metadata: true
+    include_file_metadata: true
+
+# Notas importantes:
+# 1. El postconversor consolidated_pdf se ejecuta ANTES que met_format
+# 2. Toma las imágenes TIFF originales (no las convertidas)
+# 3. Las ordena alfabéticamente por nombre de archivo
+# 4. Aplica OCR usando EasyOCR
+# 5. Divide en múltiples PDFs si excede max_size_mb
+# 6. Nombra los archivos como: subcarpeta_01.pdf, subcarpeta_02.pdf, etc.
+# 7. Si solo hay un PDF: subcarpeta_consolidated.pdf

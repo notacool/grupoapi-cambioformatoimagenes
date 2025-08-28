@@ -23,7 +23,14 @@ El **Conversor TIFF v2.0** es un sistema avanzado de conversión de archivos TIF
 - **Metadatos MET**: Archivos XML con estándar MET de la Library of Congress
 
 ### 📊 **Postconversores Avanzados por Subcarpeta**
-- **MET Format PostConverter**: Genera XMLs consolidados por formato **por cada subcarpeta**:
+- **Consolidated PDF PostConverter** (SE EJECUTA PRIMERO): Consolida todas las imágenes TIFF en PDFs únicos **por cada subcarpeta**:
+  - **Consolidación inteligente**: Une todas las imágenes TIFF en uno o varios PDFs
+  - **División por tamaño**: Divide automáticamente si excede el tamaño máximo configurable
+  - **OCR integrado**: Aplica reconocimiento óptico de caracteres usando EasyOCR
+  - **Ordenamiento alfabético**: Ordena archivos por nombre para secuencia correcta
+  - **Nomenclatura automática**: `subcarpeta_consolidated.pdf` o `subcarpeta_01.pdf`, `subcarpeta_02.pdf`
+
+- **MET Format PostConverter** (SE EJECUTA DESPUÉS): Genera XMLs consolidados por formato **por cada subcarpeta**:
   - **Archivo METS del TIFF original**: Documentación completa del archivo fuente por subcarpeta
   - Metadatos completos de archivos TIFF originales de la subcarpeta
   - Información de archivos convertidos de la subcarpeta
@@ -117,7 +124,15 @@ METS:
 
 # Configuración de postconversores
 postconverters:
-  # Postconversor MET por formato
+  # Postconversor para consolidar PDFs (SE EJECUTA PRIMERO)
+  consolidated_pdf:
+    enabled: true                    # Habilitar consolidación de PDFs
+    max_size_mb: 10                 # Tamaño máximo por PDF en MB
+    output_folder: "PDF"             # Carpeta de salida (misma que PDF individual)
+    use_ocr: true                   # Aplicar OCR a las imágenes
+    sort_by_name: true              # Ordenar archivos por nombre alfabético
+  
+  # Postconversor MET por formato (SE EJECUTA DESPUÉS)
   met_format:
     enabled: true                    # Habilitar generación de archivos MET por formato
     include_image_metadata: true     # Incluir metadatos técnicos de imagen
@@ -187,6 +202,35 @@ python main.py --config config.yaml --info
 | `--list-formats` | Listar formatos disponibles | ❌ |
 
 ## 📁 Estructura de Entrada y Salida
+
+### 🆕 **Nuevo: Postconversor de PDF Consolidado**
+
+El **Consolidated PDF Postconverter** es una funcionalidad avanzada que:
+
+#### **Características Principales:**
+- **🔄 Consolidación automática**: Une todas las imágenes TIFF de una subcarpeta en PDFs únicos
+- **📏 División inteligente**: Divide automáticamente si excede el tamaño máximo configurable
+- **🔍 OCR integrado**: Aplica reconocimiento óptico usando EasyOCR para PDFs buscables
+- **📋 Ordenamiento**: Ordena archivos alfabéticamente por nombre para secuencia correcta
+- **🏷️ Nomenclatura inteligente**: 
+  - Un PDF: `subcarpeta_consolidated.pdf`
+  - Múltiples PDFs: `subcarpeta_01.pdf`, `subcarpeta_02.pdf`, etc.
+
+#### **Configuración:**
+```yaml
+postconverters:
+  consolidated_pdf:
+    enabled: true                    # ✅ Habilitar/deshabilitar
+    max_size_mb: 15                 # 📏 Tamaño máximo por PDF (15 MB)
+    output_folder: "PDF"             # 📁 Carpeta de salida
+    use_ocr: true                   # 🔍 Aplicar OCR
+    sort_by_name: true              # 📋 Ordenar alfabéticamente
+```
+
+#### **Orden de Ejecución:**
+1. **Conversores individuales** (JPG, PDF, METS)
+2. **🆕 Consolidated PDF Postconverter** ← **NUEVO**
+3. **MET Format Postconverter**
 
 ### Estructura de Entrada
 ```
