@@ -86,13 +86,18 @@ def main(
             _list_available_formats(converter)
             return
 
-        # Para conversión, se requieren directorios
-        if not input_dir or not output_dir:
+        # Para conversión, se requiere directorio de entrada
+        if not input_dir:
             output_manager.error(
-                "Error: Se requieren --input y --output para la conversión"
+                "Error: Se requiere --input para la conversión"
             )
             output_manager.info("   Use --help para ver todas las opciones disponibles")
             return
+
+        # Si no se especifica output, usar el input como output
+        if not output_dir:
+            output_dir = input_dir
+            output_manager.info(f"📁 Usando directorio de entrada como salida: {input_dir}")
 
         # Validar directorios
         if not _validate_directories(input_dir, output_dir):
@@ -158,7 +163,12 @@ def _validate_directories(input_dir: str, output_dir: str) -> bool:
         output_manager.error(f"❌ La ruta de entrada no es un directorio: {input_dir}")
         return False
 
-    # Crear directorio de salida si no existe
+    # Si input = output, no necesitamos crear directorio de salida
+    if input_path == output_path:
+        output_manager.info(f"📁 Procesando en el mismo directorio: {input_dir}")
+        return True
+
+    # Crear directorio de salida si no existe (solo cuando son diferentes)
     try:
         output_path.mkdir(parents=True, exist_ok=True)
     except Exception as e:

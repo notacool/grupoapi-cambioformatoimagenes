@@ -161,6 +161,12 @@ python main.py \
   --output "C:\Documentos\Convertido"
 ```
 
+```bash
+# Convertir archivos TIFF de todas las subcarpetas que contengan carpetas TIFF el input tambien es el output
+python main.py \
+  --input "C:\Documentos\Proyectos"
+```
+
 #### Conversión con Formatos Específicos
 ```bash
 # Usar solo formatos específicos
@@ -193,7 +199,7 @@ python main.py --config config.yaml --info
 | Parámetro | Descripción | Obligatorio |
 |-----------|-------------|-------------|
 | `--input` | Directorio raíz con subcarpetas que contengan carpetas TIFF | ✅ |
-| `--output` | Directorio de salida | ✅ |
+| `--output` | Directorio de salida | ❌ (usa `--input` si no se especifica) |
 | `--config` | Archivo de configuración | ❌ (usa `config.yaml` por defecto) |
 | `--formats` | Formatos específicos a convertir | ❌ (usa todos los habilitados) |
 | `--workers` | Número de workers paralelos | ❌ (usa configuración por defecto) |
@@ -250,7 +256,7 @@ directorio_salida/
 │   └── conversion_20250127_143022.log
 ├── madraza/                            # Subcarpeta procesada
 │   ├── METS/                           # Archivo METS del TIFF original
-│   │   └── madraza_TIFF.xml           # ← Documentación completa del archivo fuente
+│   │   └── TIFF.xml                   # ← Documentación completa del archivo fuente
 │   ├── JPGHIGH/                        # JPGs de 400 DPI + metadatos consolidados
 │   │   ├── imagen1.jpg
 │   │   ├── imagen2.jpg
@@ -270,7 +276,7 @@ directorio_salida/
 
 El sistema genera dos tipos de archivos XML **por cada subcarpeta procesada**:
 
-#### 1. Archivo METS del TIFF Original (`{subcarpeta}_TIFF.xml`)
+#### 1. Archivo METS del TIFF Original (`TIFF.xml`)
 - **Documentación completa del archivo fuente**: Metadatos técnicos y administrativos de la subcarpeta
 - **Información de preservación**: Estructura PREMIS para archivos originales de la subcarpeta
 - **Trazabilidad**: Registro completo de archivos TIFF de la subcarpeta antes de la conversión
@@ -382,6 +388,7 @@ python main.py --input "entrada" --output "salida" --verbose
 
 # Los logs se guardan automáticamente en la carpeta 'logs/' del directorio de salida
 ```
+
 
 ## 📚 Documentación
 
