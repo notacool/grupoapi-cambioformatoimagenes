@@ -12,6 +12,7 @@ from reportlab.pdfgen import canvas as reportlab_canvas
 
 from ..output_manager import output_manager
 from .base import BaseConverter
+from .pdf_compressor import PDFCompressor
 
 
 class PDFEasyOCRConverter(BaseConverter):
@@ -31,6 +32,17 @@ class PDFEasyOCRConverter(BaseConverter):
         self.fit_to_page = config.get("fit_to_page", True)
         self.ocr_confidence = config.get("ocr_confidence", 0.5)
         self.ocr_reader = None
+        
+        # Configuración de compresión
+        compression_config = config.get("compression", {})
+        self.pdf_compressor = PDFCompressor(compression_config)
+        # Parámetros de incrustación en PDF (100% Python)
+        # Si hay valores en compression, los usamos; si no, caemos a defaults del conversor
+        self.embed_target_dpi = compression_config.get(
+            "target_dpi", config.get("resolution", 300)
+        )
+        self.embed_image_quality = compression_config.get("image_quality", 85)
+        
         self._initialize_easyocr()
 
     def _initialize_easyocr(self) -> None:
@@ -85,6 +97,23 @@ class PDFEasyOCRConverter(BaseConverter):
             # Crear PDF con OCR
             success = self._create_pdf_with_easyocr(input_path, output_path)
             if success:
+                # Aplicar compresión si está habilitada
+                if self.pdf_compressor.enabled:
+                    # Crear archivo temporal para la compresión
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+                        temp_pdf_path = Path(temp_file.name)
+                    
+                    # Comprimir el PDF
+                    if self.pdf_compressor.compress(output_path, temp_pdf_path):
+                        # Reemplazar el archivo original con el comprimido
+                        import shutil
+                        shutil.move(temp_pdf_path, output_path)
+                    else:
+                        # Si la compresión falla, mantener el original
+                        if temp_pdf_path.exists():
+                            temp_pdf_path.unlink()
+                
                 output_manager.success(
                     f"✅ Convertido: {input_path.name} -> {output_path.name}"
                 )
@@ -117,8 +146,8 @@ class PDFEasyOCRConverter(BaseConverter):
 
                 # Crear PDF con tamaño exacto de la imagen (sin bordes)
                 # Convertir píxeles a puntos (1 punto = 1/72 pulgada)
-                # Asumiendo 300 DPI para la conversión
-                dpi = 300
+                # Usar DPI configurable para controlar tamaño del PDF resultante
+                dpi = int(self.embed_target_dpi) if self.embed_target_dpi else 300
                 points_per_inch = 72
                 scale_factor = points_per_inch / dpi
 
@@ -142,7 +171,14 @@ class PDFEasyOCRConverter(BaseConverter):
                 with tempfile.NamedTemporaryFile(
                     suffix=".jpg", delete=False
                 ) as temp_file:
-                    pil_img.save(temp_file.name, format="JPEG", quality=95)
+                    # Guardar como JPEG con calidad configurable para reducir tamaño
+                    # optimize True ayuda a reducir ligeramente el tamaño
+                    pil_img.save(
+                        temp_file.name,
+                        format="JPEG",
+                        quality=int(self.embed_image_quality),
+                        optimize=True,
+                    )
                     # Agregar imagen al PDF ocupando toda la página
                     canvas_obj.drawImage(temp_file.name, x, y, page_width, page_height)
 

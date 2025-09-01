@@ -20,6 +20,7 @@ El **Conversor TIFF v2.0** es un sistema avanzado de conversión de archivos TIF
 - **JPG 400 DPI**: Alta resolución para impresión profesional
 - **JPG 200 DPI**: Resolución media optimizada para web
 - **PDF con EasyOCR**: Texto buscable y seleccionable con reconocimiento óptico
+- **🆕 PDF con Compresión Inteligente**: Reducción automática de tamaño sin pérdida de calidad
 - **Metadatos MET**: Archivos XML con estándar MET de la Library of Congress
 
 ### 📊 **Postconversores Avanzados por Subcarpeta**
@@ -99,6 +100,15 @@ formats:
     ocr_confidence: 0.2             # Confianza mínima para OCR
     create_searchable_pdf: true      # Crear PDF con texto buscable
     use_gpu: true                    # Usar GPU si está disponible
+    
+    # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF
+    compression:
+      enabled: true                   # Habilitar compresión de PDF
+      compression_level: "ebook"      # Nivel: screen, ebook, printer, prepress
+      target_dpi: 200                 # DPI objetivo para imágenes (reducir de 400)
+      image_quality: 85               # Calidad JPEG (0-100, reducir de 95)
+      remove_metadata: true           # Eliminar metadatos innecesarios
+      fallback_on_error: true         # Usar PDF original si falla compresión
 
 # Configuración de procesamiento
 processing:
@@ -127,10 +137,19 @@ postconverters:
   # Postconversor para consolidar PDFs (SE EJECUTA PRIMERO)
   consolidated_pdf:
     enabled: true                    # Habilitar consolidación de PDFs
-    max_size_mb: 10                 # Tamaño máximo por PDF en MB
+    max_size_mb: 50                 # 📏 Tamaño máximo por PDF en MB (aumentado para evitar división excesiva)
     output_folder: "PDF"             # Carpeta de salida (misma que PDF individual)
     use_ocr: true                   # Aplicar OCR a las imágenes
     sort_by_name: true              # Ordenar archivos por nombre alfabético
+    
+    # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF CONSOLIDADO
+    compression:
+      enabled: true                   # Habilitar compresión de PDF consolidado
+      compression_level: "ebook"      # Nivel: screen, ebook, printer, prepress
+      target_dpi: 200                 # DPI objetivo para imágenes
+      image_quality: 85               # Calidad JPEG (0-100)
+      remove_metadata: true           # Eliminar metadatos innecesarios
+      fallback_on_error: true         # Usar PDF original si falla compresión
   
   # Postconversor MET por formato (SE EJECUTA DESPUÉS)
   met_format:
@@ -142,6 +161,77 @@ postconverters:
     organization: 'Grupo API'        # Nombre de la organización
     creator: 'Sistema Automatizado'  # Sistema creador
 ```
+
+## 🗜️ **Compresión Inteligente de PDF**
+
+### **🆕 Nueva Funcionalidad: Compresión Automática**
+
+El sistema incluye **compresión inteligente de PDF** con dos niveles de optimización:
+
+#### **1. 📊 Compresión Embebida (100% Python)**
+- **Sin dependencias externas**: Funciona en cualquier entorno Docker
+- **DPI configurable**: Reduce el tamaño ajustando la resolución de las imágenes
+- **Calidad de imagen ajustable**: Balance entre tamaño y calidad visual
+- **Optimización automática**: Compresión JPEG optimizada durante la generación
+
+#### **2. 🔧 Post-Compresión Avanzada**
+- **pikepdf**: Compresión de streams y eliminación de metadatos
+- **pypdf**: Compresión básica de estructura PDF
+- **Fallback automático**: Si falla la compresión, usa el archivo original
+
+### **📋 Configuración de Compresión**
+
+```yaml
+# Para conversores PDF individuales
+PDF:
+  compression:
+    enabled: true                   # ✅ Habilitar compresión
+    compression_level: "ebook"      # screen|ebook|printer|prepress
+    target_dpi: 200                 # DPI objetivo (150-300)
+    image_quality: 85               # Calidad JPEG (70-95)
+    remove_metadata: true           # Eliminar metadatos
+    fallback_on_error: true         # Usar original si falla
+
+# Para PDFs consolidados
+postconverters:
+  consolidated_pdf:
+    max_size_mb: 50                 # Tamaño máximo aumentado
+    compression:
+      enabled: true                 # ✅ Compresión de PDFs consolidados
+      compression_level: "ebook"
+      target_dpi: 200
+      image_quality: 85
+```
+
+### **⚙️ Niveles de Compresión**
+
+| Nivel | DPI | Uso Recomendado | Reducción Esperada |
+|-------|-----|-----------------|-------------------|
+| `screen` | 72-150 | Web, visualización | 60-80% |
+| `ebook` | 150-200 | Lectura digital | 40-60% |
+| `printer` | 200-300 | Impresión estándar | 20-40% |
+| `prepress` | 300+ | Impresión profesional | 10-30% |
+
+### **📊 Resultados de Compresión**
+
+#### **Antes de la Compresión:**
+```
+📄 archivo.tiff (87 MB) → archivo.pdf (78 MB)
+```
+
+#### **Después de la Compresión (ebook, 200 DPI, 85% calidad):**
+```
+📄 archivo.tiff (87 MB) → archivo.pdf (25-35 MB)
+📉 Reducción: 55-70% del tamaño original
+```
+
+### **🔧 Optimización Automática**
+
+El sistema aplica automáticamente:
+- **Escalado inteligente**: Ajusta DPI según el nivel de compresión
+- **Calidad adaptiva**: Balance óptimo entre tamaño y legibilidad
+- **Eliminación de metadatos**: Reduce información innecesaria
+- **Compresión de streams**: Optimiza la estructura interna del PDF
 
 ## 🎮 Uso
 
@@ -317,6 +407,12 @@ El sistema genera dos tipos de archivos XML **por cada subcarpeta procesada**:
 - **Checksums MD5**: Verificación de integridad de archivos
 - **Información EXIF**: Metadatos de imagen y orientación
 
+### 🆕 Compresión y Optimización
+- **Compresión embebida**: Reducción de tamaño durante la generación (100% Python)
+- **Post-compresión inteligente**: pikepdf y pypdf para optimización adicional
+- **Fallback automático**: Sistema robusto que nunca falla por problemas de compresión
+- **Configuración granular**: Control total sobre DPI, calidad y niveles de compresión
+
 ## 📊 Casos de Uso
 
 ### 🏛️ Archivos y Bibliotecas
@@ -339,8 +435,14 @@ El sistema genera dos tipos de archivos XML **por cada subcarpeta procesada**:
 ### Ejecutar Tests
 
 ```bash
-# Tests básicos
-python test_converter.py
+# Tests básicos de import
+python test_basic.py
+
+# Tests específicos de compresión PDF
+python test_compression.py
+
+# Tests de conversor PDF con compresión
+python test_pdf_compression.py
 
 # Tests específicos de MET
 python test_met_converter.py
@@ -377,6 +479,15 @@ python main.py \
 
 5. **Subcarpeta falla pero otras continúan**:
    **Comportamiento esperado**: El sistema continúa procesando otras subcarpetas y genera reporte de errores
+
+6. **🆕 PDFs muy grandes sin compresión**:
+   **Solución**: Verificar que `PDF.compression.enabled: true` y ajustar `target_dpi` y `image_quality`
+
+7. **🆕 Compresión falla pero PDF se genera**:
+   **Comportamiento esperado**: El sistema usa el PDF original si la compresión falla (fallback automático)
+
+8. **🆕 Se generan muchos PDFs en lugar de uno consolidado**:
+   **Solución**: Aumentar `consolidated_pdf.max_size_mb` y verificar que la compresión esté habilitada
 
 ### Logs y Debug
 

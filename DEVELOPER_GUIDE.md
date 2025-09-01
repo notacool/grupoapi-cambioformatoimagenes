@@ -73,6 +73,120 @@ class PDFEasyOCRConverter(BaseConverter):
         self.fit_to_page = config.get("fit_to_page", True)
         self.ocr_confidence = config.get("ocr_confidence", 0.5)
         self.use_gpu = config.get("use_gpu", False)
+        
+        # 🆕 Configuración de compresión integrada
+        compression_config = config.get("compression", {})
+        self.pdf_compressor = PDFCompressor(compression_config)
+        
+        # Parámetros de compresión embebida
+        self.embed_target_dpi = compression_config.get(
+            "target_dpi", config.get("resolution", 300)
+        )
+        self.embed_image_quality = compression_config.get("image_quality", 85)
+```
+
+### 🆕 Sistema de Compresión de PDF
+
+El sistema incluye un **PDFCompressor** independiente que proporciona compresión inteligente:
+
+#### **Arquitectura de Compresión**
+
+```python
+class PDFCompressor:
+    def __init__(self, config):
+        self.enabled = config.get("enabled", True)
+        self.compression_level = config.get("compression_level", "ebook")
+        self.target_dpi = config.get("target_dpi", 200)
+        self.image_quality = config.get("image_quality", 85)
+        self.remove_metadata = config.get("remove_metadata", True)
+        self.fallback_on_error = config.get("fallback_on_error", True)
+    
+    def compress(self, input_path: Path, output_path: Path) -> bool:
+        # 1. Intentar compresión con pikepdf
+        # 2. Fallback a pypdf si falla
+        # 3. Usar archivo original si todo falla
+```
+
+#### **Doble Nivel de Compresión**
+
+1. **Compresión Embebida** (Durante la generación):
+```python
+# En PDFEasyOCRConverter._create_pdf_with_easyocr()
+with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+    # Guardar con DPI y calidad configurables
+    pil_img.save(
+        temp_file.name,
+        format="JPEG",
+        quality=int(self.embed_image_quality),  # 85 por defecto
+        optimize=True,
+    )
+    
+# Crear PDF con DPI objetivo
+dpi = int(self.embed_target_dpi)  # 200 por defecto
+scale_factor = 72 / dpi  # Reduce tamaño de página
+```
+
+2. **Post-Compresión** (Después de la generación):
+```python
+# En PDFEasyOCRConverter.convert()
+if self.pdf_compressor.enabled:
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+        temp_pdf_path = Path(temp_file.name)
+    
+    if self.pdf_compressor.compress(output_path, temp_pdf_path):
+        shutil.move(temp_pdf_path, output_path)
+```
+
+#### **Herramientas de Compresión**
+
+1. **pikepdf** (Preferida):
+```python
+def _compress_with_pikepdf(self, input_path, output_path):
+    with pikepdf.open(input_path) as pdf:
+        save_options = {
+            "object_stream_mode": pikepdf.ObjectStreamMode.generate,
+            "compress_streams": True,
+            "preserve_pdfa": False,
+        }
+        if self.remove_metadata:
+            pdf.docinfo.clear()
+        pdf.save(output_path, **save_options)
+```
+
+2. **pypdf** (Fallback):
+```python
+def _compress_with_pypdf(self, input_path, output_path):
+    reader = PdfReader(input_path)
+    writer = PdfWriter()
+    
+    for page in reader.pages:
+        writer.add_page(page)
+    
+    writer.add_metadata({})  # Metadatos mínimos
+    with open(output_path, "wb") as output_file:
+        writer.write(output_file)
+```
+
+#### **Integración en Postconversores**
+
+```python
+# En ConsolidatedPDFPostconverter
+class ConsolidatedPDFPostconverter(BasePostConverter):
+    def __init__(self, config):
+        # ... configuración existente ...
+        
+        # 🆕 Compresor para PDFs consolidados
+        compression_config = config.get("compression", {})
+        self.pdf_compressor = PDFCompressor(compression_config)
+    
+    def _create_single_pdf(self, tiff_files, output_dir, subfolder_name):
+        # ... generar PDF consolidado ...
+        
+        # Aplicar compresión al PDF consolidado
+        if self.pdf_compressor.enabled:
+            # Comprimir usando archivo temporal
+            if self.pdf_compressor.compress(output_file, temp_pdf_path):
+                shutil.move(temp_pdf_path, output_file)
 ```
 
 ## 🔄 Postconversores
@@ -423,8 +537,14 @@ def _initialize_postconverters(self):
 ### Ejecutar Tests
 
 ```bash
-# Test básico
-python test_converter.py
+# Tests básicos de import
+python test_basic.py
+
+# 🆕 Tests de compresión PDF
+python test_compression.py
+
+# 🆕 Tests de conversor PDF con compresión
+python test_pdf_compression.py
 
 # Test específico de MET
 python test_met_converter.py
@@ -473,6 +593,38 @@ class TestMiConversor(unittest.TestCase):
 
 4. **Error de permisos**:
    **Solución**: Verificar permisos de escritura en el directorio de salida
+
+5. **🆕 Compresión de PDF falla**:
+   ```
+   ⚠️ Error con pikepdf: [error message]
+   ⚠️ Compresión falló, copiando archivo original
+   ```
+   **Comportamiento esperado**: El sistema usa fallback automático
+   **Verificar**: 
+   ```python
+   # En configuración
+   compression:
+     fallback_on_error: true  # Debe estar habilitado
+   ```
+
+6. **🆕 PDFs muy grandes sin compresión**:
+   **Solución**: Verificar configuración de compresión embebida
+   ```yaml
+   PDF:
+     compression:
+       enabled: true
+       target_dpi: 200        # Reducir si es muy alto
+       image_quality: 85      # Reducir si es muy alto
+   ```
+
+7. **🆕 Herramientas de compresión no detectadas**:
+   ```
+   ⚠️ No se encontraron herramientas de compresión PDF
+   ```
+   **Solución**: Instalar dependencias
+   ```bash
+   pip install pypdf pikepdf
+   ```
 
 ### Logs y Debug
 

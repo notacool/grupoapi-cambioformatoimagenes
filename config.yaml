@@ -21,14 +21,23 @@ formats:
   
   # Conversor PDF con EasyOCR (alternativa local)
   PDF:
-    enabled: true                    # ✅ HABILITAR EasyOCR
+    enabled: false                    # ✅ HABILITAR EasyOCR
     resolution: 300                  # Resolución en DPI
     page_size: "A4"                 # Tamaño de página
     fit_to_page: true                # Ajustar imagen a la página
     ocr_language: ["es", "en"]      # Lista de idiomas para OCR
     ocr_confidence: 0.2             # Confianza mínima para OCR (0.0-1.0)
     create_searchable_pdf: true      # Crear PDF con texto buscable
-    use_gpu: true                  # Usar GPU si está disponible
+    use_gpu: true                    # Usar GPU si está disponible
+    
+    # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF
+    compression:
+      enabled: true                   # Habilitar compresión de PDF
+      compression_level: "ebook"      # Nivel: screen, ebook, printer, prepress
+      target_dpi: 200                 # DPI objetivo para imágenes (reducir de 400)
+      image_quality: 85               # Calidad JPEG (0-100, reducir de 95)
+      remove_metadata: true           # Eliminar metadatos innecesarios
+      fallback_on_error: true         # Usar PDF original si falla compresión
 
 # Configuración de procesamiento
 processing:
@@ -57,10 +66,19 @@ postconverters:
   # Postconversor para consolidar PDFs
   consolidated_pdf:
     enabled: true                    # Habilitar consolidación de PDFs
-    max_size_mb: 10                 # Tamaño máximo por PDF en MB
+    max_size_mb: 50                 # 📏 Aumentar a 50MB para evitar división excesiva
     output_folder: "PDF"             # Carpeta de salida (misma que PDF individual)
     use_ocr: true                   # Aplicar OCR a las imágenes
     sort_by_name: true              # Ordenar archivos por nombre alfabético
+    
+    # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF CONSOLIDADO
+    compression:
+      enabled: true                   # Habilitar compresión de PDF consolidado
+      compression_level: "ebook"      # Nivel: screen, ebook, printer, prepress
+      target_dpi: 200                 # DPI objetivo para imágenes
+      image_quality: 85               # Calidad JPEG (0-100)
+      remove_metadata: true           # Eliminar metadatos innecesarios
+      fallback_on_error: true         # Usar PDF original si falla compresión
   
   # Postconversor MET por formato
   met_format:

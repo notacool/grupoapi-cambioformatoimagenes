@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from src.converters.pdf_easyocr_converter import PDFEasyOCRConverter
+from src.converters.pdf_compressor import PDFCompressor
 from src.output_manager import output_manager
 from src.postconverters.base import BasePostConverter
 
@@ -39,6 +40,10 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
 
         # Inicializar el conversor PDF con OCR
         self.pdf_converter = PDFEasyOCRConverter(config)
+
+        # Configuración de compresión para PDFs consolidados
+        compression_config = config.get("compression", {})
+        self.pdf_compressor = PDFCompressor(compression_config)
 
         # Configurar logging
         self.logger = logging.getLogger(__name__)
@@ -255,9 +260,32 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
                     temp_pdf.unlink()
 
             if success:
-                output_manager.success(
-                    f"✅ PDF consolidado creado: {subfolder_name}_consolidated.pdf"
-                )
+                # Aplicar compresión al PDF consolidado si está habilitada
+                if self.pdf_compressor.enabled:
+                    # Crear archivo temporal para la compresión
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+                        temp_pdf_path = Path(temp_file.name)
+                    
+                    # Comprimir el PDF consolidado
+                    if self.pdf_compressor.compress(output_file, temp_pdf_path):
+                        # Reemplazar el archivo original con el comprimido
+                        import shutil
+                        shutil.move(temp_pdf_path, output_file)
+                        output_manager.success(
+                            f"✅ PDF consolidado comprimido: {subfolder_name}_consolidated.pdf"
+                        )
+                    else:
+                        # Si la compresión falla, mantener el original
+                        if temp_pdf_path.exists():
+                            temp_pdf_path.unlink()
+                        output_manager.success(
+                            f"✅ PDF consolidado creado: {subfolder_name}_consolidated.pdf"
+                        )
+                else:
+                    output_manager.success(
+                        f"✅ PDF consolidado creado: {subfolder_name}_consolidated.pdf"
+                    )
 
             return success
 
@@ -304,10 +332,34 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
                 if pdf_files:
                     # Consolidar batch en un PDF
                     if self._merge_pdfs(pdf_files, output_file):
+                        # Aplicar compresión al PDF si está habilitada
+                        if self.pdf_compressor.enabled:
+                            # Crear archivo temporal para la compresión
+                            import tempfile
+                            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+                                temp_pdf_path = Path(temp_file.name)
+                            
+                            # Comprimir el PDF
+                            if self.pdf_compressor.compress(output_file, temp_pdf_path):
+                                # Reemplazar el archivo original con el comprimido
+                                import shutil
+                                shutil.move(temp_pdf_path, output_file)
+                                output_manager.success(
+                                    f"PDF {pdf_number}/{total_pdfs} comprimido: {output_file.name}"
+                                )
+                            else:
+                                # Si la compresión falla, mantener el original
+                                if temp_pdf_path.exists():
+                                    temp_pdf_path.unlink()
+                                output_manager.success(
+                                    f"PDF {pdf_number}/{total_pdfs} creado: {output_file.name}"
+                                )
+                        else:
+                            output_manager.success(
+                                f"PDF {pdf_number}/{total_pdfs} creado: {output_file.name}"
+                            )
+                        
                         success_count += 1
-                        output_manager.success(
-                            f"PDF {pdf_number}/{total_pdfs} creado: {output_file.name}"
-                        )
 
                     # Limpiar archivos temporales
                     for temp_pdf in pdf_files:
