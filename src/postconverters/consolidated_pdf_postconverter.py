@@ -346,16 +346,19 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
                                 shutil.move(temp_pdf_path, output_file)
                                 output_manager.success(
                                     f"PDF {pdf_number}/{total_pdfs} comprimido: {output_file.name}"
-                                )    else:
+                                )
+                            else:
                                 # Si la compresión falla, mantener el original
                                 if temp_pdf_path.exists():
                                     temp_pdf_path.unlink()
-                                output_manager.success(
+                                    output_manager.success(
                                     f"PDF {pdf_number}/{total_pdfs} creado: {output_file.name}"
-                                )else:
-                            output_manager.success(
-                                f"PDF {pdf_number}/{total_pdfs} creado: {output_file.name}"
-                            )
+                                ) 
+                                else:
+                                    output_manager.success(
+                                        f"PDF {pdf_number}/{total_pdfs} creado: {output_file.name}"
+                                )
+                                        
                         success_count += 1
 
                     # Limpiar archivos temporales

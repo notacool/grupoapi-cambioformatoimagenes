@@ -78,13 +78,15 @@ class PDFEasyOCRConverter(BaseConverter):
             if not self.validate_input(input_path):
                 output_manager.error(
                     f"Error: Archivo de entrada inválido: {input_path}"
-                )        return False
+                )
+                return False
 
             # Crear directorio de salida
             if not self.create_output_directory(output_path):
                 output_manager.error(
                     f"Error: No se pudo crear el directorio de salida: {output_path.parent}"
-                )        return False
+                )
+                return False
 
             # Verificar que EasyOCR esté disponible
             if not self.ocr_reader:
@@ -113,7 +115,8 @@ class PDFEasyOCRConverter(BaseConverter):
                 
                 output_manager.success(
                     f"✅ Convertido: {input_path.name} -> {output_path.name}"
-                )    return success
+                )
+                return success
 
         except Exception as e:
             output_manager.error(f"❌ Error convirtiendo {input_path.name}: {str(e)}")
@@ -340,4 +343,5 @@ class PDFEasyOCRConverter(BaseConverter):
                 "ocr_confidence": self.ocr_confidence,
                 "format": "PDF",
             }
-        )return base_info
+        )
+        return base_info
