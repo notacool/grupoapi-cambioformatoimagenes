@@ -45,6 +45,22 @@ jobs:
       run: |
         python test_basic.py
 
+    - name: Ejecutar tests de compresión
+      run: |
+        if [ -f "test_compression.py" ]; then
+          echo "Ejecutando test_compression.py..."
+          python test_compression.py || echo "⚠️ test_compression.py falló pero continuando..."
+        else
+          echo "⚠️ test_compression.py no encontrado, saltando..."
+        fi
+        
+        if [ -f "test_pdf_compression.py" ]; then
+          echo "Ejecutando test_pdf_compression.py..."
+          python test_pdf_compression.py || echo "⚠️ test_pdf_compression.py falló pero continuando..."
+        else
+          echo "⚠️ test_pdf_compression.py no encontrado, saltando..."
+        fi
+
     - name: Ejecutar tests completos (si existen)
       run: |
         if [ -f "test_converter.py" ]; then

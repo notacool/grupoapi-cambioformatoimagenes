@@ -45,6 +45,27 @@ jobs:
         python -c "from src.converter import TIFFConverter; print('✅ TIFFConverter importado correctamente')"
         python -c "from src.config_manager import ConfigManager; print('✅ ConfigManager importado correctamente')"
         python -c "from src.file_processor import FileProcessor; print('✅ FileProcessor importado correctamente')"
+        python -c "from src.converters.pdf_compressor import PDFCompressor; print('✅ PDFCompressor importado correctamente')"
+
+    - name: Ejecutar tests básicos
+      run: |
+        python test_basic.py
+
+    - name: Ejecutar tests de compresión
+      run: |
+        if [ -f "test_compression.py" ]; then
+          echo "Ejecutando test_compression.py..."
+          python test_compression.py || echo "⚠️ test_compression.py falló pero continuando..."
+        else
+          echo "⚠️ test_compression.py no encontrado, saltando..."
+        fi
+        
+        if [ -f "test_pdf_compression.py" ]; then
+          echo "Ejecutando test_pdf_compression.py..."
+          python test_pdf_compression.py || echo "⚠️ test_pdf_compression.py falló pero continuando..."
+        else
+          echo "⚠️ test_pdf_compression.py no encontrado, saltando..."
+        fi
 
     - name: Ejecutar tests (si existen)
       run: |

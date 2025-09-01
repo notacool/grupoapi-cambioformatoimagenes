@@ -26,6 +26,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "PyPDF2"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "pypdf"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pikepdf"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "reportlab"
         update-types: ["version-update:semver-major"]
 
