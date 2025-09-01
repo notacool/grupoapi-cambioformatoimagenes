@@ -31,21 +31,24 @@ class PDFCompressor:
         Args:
             config: Configuración del compresor
         """
-        self.enabled = config.get("enabled", True)
-        self.compression_level = config.get("compression_level", "ebook")
-        self.target_dpi = config.get("target_dpi", 200)
-        self.image_quality = config.get("image_quality", 85)
-        self.remove_metadata = config.get("remove_metadata", True)
-        self.fallback_on_error = config.get("fallback_on_error", True)
-        
+        # Configuración principal
+        self.config = {
+            'enabled': config.get("enabled", True),
+            'compression_level': config.get("compression_level", "ebook"),
+            'target_dpi': config.get("target_dpi", 200),
+            'image_quality': config.get("image_quality", 85),
+            'remove_metadata': config.get("remove_metadata", True),
+            'fallback_on_error': config.get("fallback_on_error", True)
+        }
+        self.ghostscript_name = None
         # Validar nivel de compresión
         valid_levels = ["screen", "ebook", "printer", "prepress"]
-        if self.compression_level not in valid_levels:
+        if self.config['compression_level'] not in valid_levels:
             output_manager.warning(
-                f"⚠️ Nivel de compresión '{self.compression_level}' no válido. "
+                f"⚠️ Nivel de compresión '{self.config['compression_level']}' no válido. "
                 f"Usando 'ebook' por defecto."
             )
-            self.compression_level = "ebook"
+            self.config['compression_level'] = "ebook"
         
         # Configurar logging
         self.logger = logging.getLogger(__name__)
@@ -64,7 +67,7 @@ class PDFCompressor:
                 "⚠️ No se encontraron herramientas de compresión PDF. "
                 "La compresión estará deshabilitada."
             )
-            self.enabled = False
+            self.config['enabled'] = False
 
     def _check_ghostscript(self) -> bool:
         """Verifica si Ghostscript está disponible."""
@@ -75,12 +78,13 @@ class PDFCompressor:
             for gs_name in gs_names:
                 try:
                     result = subprocess.run(
-                        [gs_name, "--version"], 
-                        capture_output=True, 
-                        text=True, 
-                        timeout=5
+                        [gs_name, "--version"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False
                     )
-                    if result.returncode == 0:
+                                        if result.returncode == 0:
                         output_manager.info(f"✅ Ghostscript disponible: {gs_name}")
                         self.ghostscript_name = gs_name
                         return True
@@ -94,7 +98,7 @@ class PDFCompressor:
     def _check_pikepdf(self) -> bool:
         """Verifica si pikepdf está disponible."""
         try:
-            import pikepdf
+            import pikepdf  # pylint: disable=import-outside-toplevel
             output_manager.info("✅ pikepdf disponible")
             return True
         except ImportError:
@@ -103,7 +107,7 @@ class PDFCompressor:
     def _check_pypdf(self) -> bool:
         """Verifica si pypdf está disponible."""
         try:
-            from pypdf import PdfReader, PdfWriter
+            from pypdf import PdfReader, PdfWriter  # pylint: disable=import-outside-toplevel
             output_manager.info("✅ pypdf disponible")
             return True
         except ImportError:
@@ -120,7 +124,7 @@ class PDFCompressor:
         Returns:
             True si la compresión fue exitosa
         """
-        if not self.enabled:
+        if not self.config['enabled']:
             output_manager.info("🔄 Compresión de PDF deshabilitada")
             return True
 
@@ -133,7 +137,7 @@ class PDFCompressor:
         
         output_manager.info(
             f"🔄 Comprimiendo PDF: {input_path.name} "
-            f"({original_size:.1f} MB) -> {self.compression_level}"
+            f"({original_size:.1f} MB) -> {self.config['compression_level']}"
         )
 
         # Intentar compresión con diferentes métodos
@@ -152,7 +156,7 @@ class PDFCompressor:
             success = self._compress_with_pypdf(input_path, output_path)
         
         # Si todos fallaron y fallback está habilitado
-        if not success and self.fallback_on_error:
+        if not success and self.config['fallback_on_error']:
             output_manager.warning(
                 "⚠️ Compresión falló, copiando archivo original"
             )
@@ -189,30 +193,31 @@ class PDFCompressor:
                 self.ghostscript_name,
                 "-sDEVICE=pdfwrite",
                 "-dCompatibilityLevel=1.4",
-                f"-dPDFSETTINGS=/{self.compression_level}",
+                f"-dPDFSETTINGS=/{self.config['compression_level']}",
                 "-dNOPAUSE",
                 "-dQUIET",
                 "-dBATCH",
                 "-dAutoRotatePages=/None",
                 "-dColorImageDownsampleType=/Bicubic",
-                "-dColorImageResolution={}".format(self.target_dpi),
+                f"-dColorImageResolution={self.config['target_dpi']}",
                 "-dGrayImageDownsampleType=/Bicubic",
-                "-dGrayImageResolution={}".format(self.target_dpi),
+                f"-dGrayImageResolution={self.config['target_dpi']}",
                 "-dMonoImageDownsampleType=/Bicubic",
-                "-dMonoImageResolution={}".format(self.target_dpi),
+                f"-dMonoImageResolution={self.config['target_dpi']}",
                 "-dColorImageFilter=/DCTEncode",
                 "-dGrayImageFilter=/DCTEncode",
                 "-dMonoImageFilter=/CCITTFaxEncode",
-                "-dJPEGQuality={}".format(self.image_quality),
+                f"-dJPEGQuality={self.config['image_quality']}",
                 f"-sOutputFile={output_path}",
                 str(input_path)
             ]
             
             result = subprocess.run(
-                cmd, 
-                capture_output=True, 
-                text=True, 
-                timeout=60
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False
             )
             
             if result.returncode == 0 and output_path.exists():
@@ -241,10 +246,10 @@ class PDFCompressor:
         Returns:
             True si la compresión fue exitosa
         """
-        try:
-            import pikepdf
-            
-            with pikepdf.open(input_path) as pdf:
+                   try:
+               import pikepdf  # pylint: disable=import-outside-toplevel
+
+               with pikepdf.open(input_path) as pdf:
                 # Configurar opciones de compresión
                 save_options = {
                     "object_stream_mode": pikepdf.ObjectStreamMode.generate,
@@ -254,7 +259,7 @@ class PDFCompressor:
                 }
                 
                 # Si se quiere eliminar metadatos
-                if self.remove_metadata:
+                if self.config['remove_metadata']:
                     pdf.docinfo.clear()
                 
                 pdf.save(output_path, **save_options)
@@ -275,10 +280,10 @@ class PDFCompressor:
         Returns:
             True si la compresión fue exitosa
         """
-        try:
-            from pypdf import PdfReader, PdfWriter
-            
-            reader = PdfReader(input_path)
+                   try:
+               from pypdf import PdfReader, PdfWriter  # pylint: disable=import-outside-toplevel
+
+               reader = PdfReader(input_path)
             writer = PdfWriter()
             
             # Copiar páginas
@@ -305,11 +310,7 @@ class PDFCompressor:
             Diccionario con información de herramientas disponibles
         """
         return {
-            "enabled": self.enabled,
-            "compression_level": self.compression_level,
-            "target_dpi": self.target_dpi,
-            "image_quality": self.image_quality,
-            "remove_metadata": self.remove_metadata,
+            **self.config,
             "tools_available": {
                 "ghostscript": self.ghostscript_available,
                 "pikepdf": self.pikepdf_available,

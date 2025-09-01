@@ -32,7 +32,6 @@ class PDFEasyOCRConverter(BaseConverter):
         self.fit_to_page = config.get("fit_to_page", True)
         self.ocr_confidence = config.get("ocr_confidence", 0.5)
         self.ocr_reader = None
-        
         # Configuración de compresión
         compression_config = config.get("compression", {})
         self.pdf_compressor = PDFCompressor(compression_config)
@@ -79,15 +78,13 @@ class PDFEasyOCRConverter(BaseConverter):
             if not self.validate_input(input_path):
                 output_manager.error(
                     f"Error: Archivo de entrada inválido: {input_path}"
-                )
-                return False
+                )        return False
 
             # Crear directorio de salida
             if not self.create_output_directory(output_path):
                 output_manager.error(
                     f"Error: No se pudo crear el directorio de salida: {output_path.parent}"
-                )
-                return False
+                )        return False
 
             # Verificar que EasyOCR esté disponible
             if not self.ocr_reader:
@@ -116,8 +113,7 @@ class PDFEasyOCRConverter(BaseConverter):
                 
                 output_manager.success(
                     f"✅ Convertido: {input_path.name} -> {output_path.name}"
-                )
-            return success
+                )    return success
 
         except Exception as e:
             output_manager.error(f"❌ Error convirtiendo {input_path.name}: {str(e)}")
@@ -178,8 +174,7 @@ class PDFEasyOCRConverter(BaseConverter):
                         format="JPEG",
                         quality=int(self.embed_image_quality),
                         optimize=True,
-                    )
-                    # Agregar imagen al PDF ocupando toda la página
+                    )            # Agregar imagen al PDF ocupando toda la página
                     canvas_obj.drawImage(temp_file.name, x, y, page_width, page_height)
 
                 # Limpiar archivo temporal
@@ -345,5 +340,4 @@ class PDFEasyOCRConverter(BaseConverter):
                 "ocr_confidence": self.ocr_confidence,
                 "format": "PDF",
             }
-        )
-        return base_info
+        )return base_info
