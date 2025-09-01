@@ -84,7 +84,7 @@ class PDFCompressor:
                         timeout=5,
                         check=False
                     )
-                                        if result.returncode == 0:
+                    if result.returncode == 0:
                         output_manager.info(f"✅ Ghostscript disponible: {gs_name}")
                         self.ghostscript_name = gs_name
                         return True
@@ -246,10 +246,10 @@ class PDFCompressor:
         Returns:
             True si la compresión fue exitosa
         """
-                   try:
-               import pikepdf  # pylint: disable=import-outside-toplevel
+        try:
+            import pikepdf  # pylint: disable=import-outside-toplevel
 
-               with pikepdf.open(input_path) as pdf:
+            with pikepdf.open(input_path) as pdf:
                 # Configurar opciones de compresión
                 save_options = {
                     "object_stream_mode": pikepdf.ObjectStreamMode.generate,
@@ -280,10 +280,10 @@ class PDFCompressor:
         Returns:
             True si la compresión fue exitosa
         """
-                   try:
-               from pypdf import PdfReader, PdfWriter  # pylint: disable=import-outside-toplevel
+        try:
+            from pypdf import PdfReader, PdfWriter  # pylint: disable=import-outside-toplevel
 
-               reader = PdfReader(input_path)
+            reader = PdfReader(input_path)
             writer = PdfWriter()
             
             # Copiar páginas
