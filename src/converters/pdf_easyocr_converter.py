@@ -49,8 +49,11 @@ class PDFEasyOCRConverter(BaseConverter):
         try:
             if isinstance(self.ocr_language, str):
                 languages = [self.ocr_language]
-            else:
+            elif isinstance(self.ocr_language, list):
                 languages = self.ocr_language
+            else:
+                languages = ["es"]  # Fallback a español
+                output_manager.warning("⚠️ Formato de idioma OCR inválido, usando español por defecto")
 
             output_manager.info(f"Inicializando EasyOCR con idioma: {languages[0]}")
             # Usar GPU si está configurado y disponible
@@ -58,6 +61,9 @@ class PDFEasyOCRConverter(BaseConverter):
             self.ocr_reader = easyocr.Reader(languages, gpu=use_gpu)
             output_manager.success("✅ EasyOCR inicializado correctamente")
 
+        except ImportError:
+            output_manager.error("❌ EasyOCR no está instalado. Instalar con: pip install easyocr")
+            self.ocr_reader = None
         except Exception as e:
             output_manager.error(f"❌ Error inicializando EasyOCR: {str(e)}")
             self.ocr_reader = None

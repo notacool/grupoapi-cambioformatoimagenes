@@ -49,7 +49,12 @@ jobs:
 
     - name: Ejecutar tests básicos
       run: |
-        python test_basic.py || echo "⚠️ test_basic.py falló pero continuando..."
+        if [ -f "test_basic.py" ]; then
+          echo "Ejecutando test_basic.py..."
+          python test_basic.py || echo "⚠️ test_basic.py falló pero continuando..."
+        else
+          echo "⚠️ test_basic.py no encontrado, saltando..."
+        fi
       continue-on-error: true
 
     - name: Ejecutar tests de compresión

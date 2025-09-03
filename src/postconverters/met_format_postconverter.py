@@ -8,8 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
-from src.output_manager import output_manager
-from src.postconverters.base import BasePostConverter
+from ..output_manager import output_manager
+from .base import BasePostConverter
 
 
 class METFormatPostConverter(BasePostConverter):

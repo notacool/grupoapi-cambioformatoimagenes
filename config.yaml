@@ -21,7 +21,7 @@ formats:
   
   # Conversor PDF con EasyOCR (alternativa local)
   PDF:
-    enabled: false                    # ✅ HABILITAR EasyOCR
+    enabled: true                     # ✅ HABILITAR EasyOCR
     resolution: 300                  # Resolución en DPI
     page_size: "A4"                 # Tamaño de página
     fit_to_page: true                # Ajustar imagen a la página

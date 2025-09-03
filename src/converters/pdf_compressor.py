@@ -265,8 +265,14 @@ class PDFCompressor:
                 pdf.save(output_path, **save_options)
                 return True
                 
+        except pikepdf.PasswordError:
+            output_manager.warning("⚠️ PDF protegido con contraseña, saltando compresión con pikepdf")
+            return False
+        except pikepdf.PdfError as e:
+            output_manager.warning(f"⚠️ Error de formato PDF con pikepdf: {str(e)}")
+            return False
         except Exception as e:
-            output_manager.warning(f"⚠️ Error con pikepdf: {str(e)}")
+            output_manager.warning(f"⚠️ Error inesperado con pikepdf: {str(e)}")
             return False
 
     def _compress_with_pypdf(self, input_path: Path, output_path: Path) -> bool:

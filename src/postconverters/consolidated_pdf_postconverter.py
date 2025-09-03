@@ -15,10 +15,10 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src.converters.pdf_easyocr_converter import PDFEasyOCRConverter
-from src.converters.pdf_compressor import PDFCompressor
-from src.output_manager import output_manager
-from src.postconverters.base import BasePostConverter
+from ..converters.pdf_easyocr_converter import PDFEasyOCRConverter
+from ..converters.pdf_compressor import PDFCompressor
+from ..output_manager import output_manager
+from .base import BasePostConverter
 
 
 class ConsolidatedPDFPostconverter(BasePostConverter):
@@ -351,12 +351,8 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
                                 # Si la compresión falla, mantener el original
                                 if temp_pdf_path.exists():
                                     temp_pdf_path.unlink()
-                                    output_manager.success(
+                                output_manager.success(
                                     f"PDF {pdf_number}/{total_pdfs} creado: {output_file.name}"
-                                ) 
-                                else:
-                                    output_manager.success(
-                                        f"PDF {pdf_number}/{total_pdfs} creado: {output_file.name}"
                                 )
                                         
                         success_count += 1

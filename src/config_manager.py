@@ -162,6 +162,10 @@ class ConfigManager:
         Returns:
             True si el formato está habilitado
         """
+        if not isinstance(format_name, str):
+            output_manager.warning(f"⚠️ Nombre de formato debe ser string, recibido: {type(format_name)}")
+            return False
+            
         format_config = self.get_format_config(format_name)
         return format_config.get("enabled", False)
 
