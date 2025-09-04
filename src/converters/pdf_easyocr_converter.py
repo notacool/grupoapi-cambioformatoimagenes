@@ -103,7 +103,7 @@ class PDFEasyOCRConverter(BaseConverter):
             success = self._create_pdf_with_easyocr(input_path, output_path)
             if success:
                 # Aplicar compresión si está habilitada
-                if self.pdf_compressor.enabled:
+                if self.pdf_compressor.config['enabled']:
                     # Crear archivo temporal para la compresión
                     import tempfile
                     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:

@@ -261,7 +261,7 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
 
             if success:
                 # Aplicar compresión al PDF consolidado si está habilitada
-                if self.pdf_compressor.enabled:
+                if self.pdf_compressor.config['enabled']:
                     # Crear archivo temporal para la compresión
                     import tempfile
                     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
@@ -333,7 +333,7 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
                     # Consolidar batch en un PDF
                     if self._merge_pdfs(pdf_files, output_file):
                         # Aplicar compresión al PDF si está habilitada
-                        if self.pdf_compressor.enabled:
+                        if self.pdf_compressor.config['enabled']:
                             # Crear archivo temporal para la compresión
                             import tempfile
                             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
