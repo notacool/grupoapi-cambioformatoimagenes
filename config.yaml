@@ -28,6 +28,7 @@ formats:
     ocr_language: ["es", "en"]      # Lista de idiomas para OCR
     ocr_confidence: 0.2             # Confianza mínima para OCR (0.0-1.0)
     create_searchable_pdf: true      # Crear PDF con texto buscable
+    use_ocr: true                    # 🆕 HABILITAR/DESHABILITAR OCR (true/false)
     use_gpu: true                    # Usar GPU si está disponible
     
     # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF
@@ -68,7 +69,7 @@ postconverters:
     enabled: true                    # Habilitar consolidación de PDFs
     max_size_mb: 5000               # 📏 Aumentar a 5GB para archivos grandes de producción
     output_folder: "PDF"             # Carpeta de salida (misma que PDF individual)
-    use_ocr: true                   # Aplicar OCR a las imágenes
+    use_ocr: true                   # 🆕 HABILITAR/DESHABILITAR OCR en PDF consolidado (true/false)
     sort_by_name: true              # Ordenar archivos por nombre alfabético
     
     # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF CONSOLIDADO
@@ -99,3 +100,10 @@ postconverters:
 # - PDF está habilitado como única opción de OCR
 # - Tesseract y Azure OCR están deshabilitados
 # - El postconversor consolidated_pdf se ejecuta ANTES que met_format
+#
+# 🆕 NUEVAS OPCIONES DE OCR:
+# - use_ocr: true/false - Controla si se aplica OCR a los PDFs
+#   * true: PDFs con texto buscable (OCR habilitado)
+#   * false: PDFs solo con imágenes (OCR deshabilitado, más rápido)
+# - Esta opción está disponible tanto en PDF individual como en PDF consolidado
+# - Cuando use_ocr=false, los PDFs se crean más rápido pero sin texto buscable

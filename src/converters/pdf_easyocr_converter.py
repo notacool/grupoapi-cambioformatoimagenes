@@ -28,6 +28,7 @@ class PDFEasyOCRConverter(BaseConverter):
         super().__init__(config)
         self.ocr_language = config.get("ocr_language", ["es"])
         self.create_searchable_pdf = config.get("create_searchable_pdf", True)
+        self.use_ocr = config.get("use_ocr", True)  # Nueva opción para controlar OCR
         self.page_size = config.get("page_size", "A4")
         self.fit_to_page = config.get("fit_to_page", True)
         self.ocr_confidence = config.get("ocr_confidence", 0.5)
@@ -42,7 +43,12 @@ class PDFEasyOCRConverter(BaseConverter):
         )
         self.embed_image_quality = compression_config.get("image_quality", 85)
         
-        self._initialize_easyocr()
+        # Solo inicializar EasyOCR si está habilitado
+        if self.use_ocr and self.create_searchable_pdf:
+            self._initialize_easyocr()
+        else:
+            output_manager.info("ℹ️ OCR deshabilitado - PDFs se crearán sin texto buscable")
+            self.ocr_reader = None
 
     def _initialize_easyocr(self) -> None:
         """Inicializa EasyOCR con el idioma especificado"""
@@ -94,9 +100,9 @@ class PDFEasyOCRConverter(BaseConverter):
                 )
                 return False
 
-            # Verificar que EasyOCR esté disponible
-            if not self.ocr_reader:
-                output_manager.error("❌ EasyOCR no está disponible")
+            # Verificar que EasyOCR esté disponible solo si OCR está habilitado
+            if self.use_ocr and self.create_searchable_pdf and not self.ocr_reader:
+                output_manager.error("❌ EasyOCR no está disponible pero OCR está habilitado")
                 return False
 
             # Crear PDF con OCR
@@ -190,8 +196,10 @@ class PDFEasyOCRConverter(BaseConverter):
                 os.unlink(temp_file.name)
 
                 # Realizar OCR si está habilitado
-                if self.create_searchable_pdf:
+                if self.use_ocr and self.create_searchable_pdf and self.ocr_reader:
                     self._add_text_layer_to_pdf(canvas_obj, pil_img, scale, x, y)
+                elif not self.use_ocr:
+                    output_manager.info(f"ℹ️ OCR deshabilitado para {input_path.name} - PDF sin texto buscable")
 
                 canvas_obj.save()
 
@@ -344,6 +352,7 @@ class PDFEasyOCRConverter(BaseConverter):
             {
                 "ocr_language": self.ocr_language,
                 "create_searchable_pdf": self.create_searchable_pdf,
+                "use_ocr": self.use_ocr,
                 "page_size": self.page_size,
                 "fit_to_page": self.fit_to_page,
                 "ocr_confidence": self.ocr_confidence,

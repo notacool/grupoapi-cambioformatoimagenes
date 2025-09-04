@@ -3,12 +3,13 @@
 ## 📋 Tabla de Contenidos
 
 1. [Arquitectura del Sistema](#arquitectura-del-sistema)
-2. [Conversores](#conversores)
-3. [Postconversores](#postconversores)
-4. [Configuración](#configuración)
-5. [Extensibilidad](#extensibilidad)
-6. [Testing](#testing)
-7. [Troubleshooting](#troubleshooting)
+2. [Patrones de Desarrollo](#patrones-de-desarrollo)
+3. [Conversores](#conversores)
+4. [Postconversores](#postconversores)
+5. [Configuración](#configuración)
+6. [Extensibilidad](#extensibilidad)
+7. [Testing](#testing)
+8. [Troubleshooting](#troubleshooting)
 
 ## 🏗️ Arquitectura del Sistema
 
@@ -20,15 +21,142 @@ src/
 ├── config_manager.py         # Gestor de configuración
 ├── file_processor.py         # Procesador de archivos
 ├── output_manager.py         # Gestor de salida y logging
+├── config_builder.py         # Builder pattern para configuraciones
 ├── converters/               # Conversores de formato
 │   ├── base.py              # Clase base para conversores
+│   ├── factory.py           # Factory pattern para conversores
+│   ├── compression_strategies.py  # Strategy pattern para compresión
 │   ├── jpg_resolution_converter.py
 │   ├── pdf_easyocr_converter.py
 │   └── met_metadata_converter.py
-└── postconverters/           # Postprocesadores
-    ├── base.py              # Clase base para postconversores
-    └── met_format_postconverter.py
+├── postconverters/           # Postprocesadores
+│   ├── base.py              # Clase base para postconversores
+│   └── met_format_postconverter.py
+├── observers/                # Sistema de eventos
+│   └── event_system.py      # Observer pattern para eventos
+└── commands/                 # Sistema de comandos
+    └── command_pattern.py   # Command pattern para operaciones
 ```
+
+## 🏗️ Patrones de Desarrollo
+
+El sistema implementa varios patrones de diseño para mejorar la mantenibilidad, extensibilidad y robustez:
+
+### 🔧 Factory Pattern
+
+**Ubicación**: `src/converters/factory.py`
+
+Permite crear conversores de manera dinámica y registrar nuevos conversores sin modificar el código principal.
+
+```python
+from src.converters.factory import ConverterFactory
+
+# Registrar nuevo conversor
+ConverterFactory.register_converter("WEBP", WebPConverter)
+
+# Crear conversores automáticamente
+converters = ConverterFactory.create_converters_from_config(config_manager)
+```
+
+**Beneficios**:
+- ✅ Extensibilidad sin modificar código existente
+- ✅ Creación automática basada en configuración
+- ✅ Validación de tipos de conversores
+
+### 🎯 Strategy Pattern
+
+**Ubicación**: `src/converters/compression_strategies.py`
+
+Permite intercambiar diferentes estrategias de compresión de PDF dinámicamente.
+
+```python
+from src.converters.compression_strategies import CompressionContext, PikepdfCompressionStrategy
+
+# Crear contexto con estrategia
+context = CompressionContext(PikepdfCompressionStrategy())
+
+# Cambiar estrategia dinámicamente
+context.set_strategy(GhostscriptCompressionStrategy())
+
+# Comprimir con estrategia actual
+context.compress(input_path, output_path, config)
+```
+
+**Estrategias disponibles**:
+- `GhostscriptCompressionStrategy`: Compresión con Ghostscript
+- `PikepdfCompressionStrategy`: Compresión con pikepdf
+- `PypdfCompressionStrategy`: Compresión con pypdf
+
+### 👁️ Observer Pattern
+
+**Ubicación**: `src/observers/event_system.py`
+
+Sistema de eventos desacoplado para notificaciones y monitoreo.
+
+```python
+from src.observers.event_system import event_manager, LoggingObserver, MetricsObserver
+
+# Adjuntar observadores
+event_manager.attach(LoggingObserver())
+event_manager.attach(MetricsObserver())
+
+# Emitir eventos
+event_manager.emit(EventType.CONVERSION_STARTED, {"file": "test.tiff"})
+```
+
+**Tipos de eventos**:
+- `CONVERSION_STARTED`: Inicio de conversión
+- `CONVERSION_COMPLETED`: Conversión completada
+- `CONVERSION_FAILED`: Conversión fallida
+- `FILE_PROCESSED`: Archivo procesado
+- `ERROR_OCCURRED`: Error ocurrido
+
+### 🏗️ Builder Pattern
+
+**Ubicación**: `src/config_builder.py`
+
+Construcción fluida y validada de configuraciones del sistema.
+
+```python
+from src.config_builder import ProductionConfigBuilder
+
+# Configuración de producción
+config = (ProductionConfigBuilder()
+          .add_format("JPGHIGH")
+          .set_format_quality(95)
+          .set_format_dpi(400)
+          .add_pdf_config(resolution=300)
+          .set_pdf_max_size(5000)
+          .build())
+```
+
+**Builders especializados**:
+- `ProductionConfigBuilder`: Configuración optimizada para producción
+- `DevelopmentConfigBuilder`: Configuración para desarrollo y testing
+
+### 🔄 Command Pattern
+
+**Ubicación**: `src/commands/command_pattern.py`
+
+Encapsula operaciones del sistema permitiendo deshacer/rehacer.
+
+```python
+from src.commands.command_pattern import CommandInvoker, ConvertFileCommand
+
+# Crear y ejecutar comandos
+invoker = CommandInvoker()
+command = ConvertFileCommand(converter, input_path, output_path, "PDF")
+invoker.execute_command(command)
+
+# Deshacer último comando
+invoker.undo_last_command()
+```
+
+**Comandos disponibles**:
+- `ConvertFileCommand`: Conversión de archivos
+- `CreateDirectoryCommand`: Creación de directorios
+- `DeleteFileCommand`: Eliminación de archivos
+- `MacroCommand`: Comandos compuestos
 
 ## 🔄 Conversores
 
@@ -84,6 +212,62 @@ class PDFEasyOCRConverter(BaseConverter):
         )
         self.embed_image_quality = compression_config.get("image_quality", 85)
 ```
+
+### 🆕 Control de OCR - Nueva Funcionalidad
+
+El sistema ahora incluye control granular del OCR para optimizar el rendimiento:
+
+#### **Configuración de OCR**
+
+```python
+class PDFEasyOCRConverter(BaseConverter):
+    def __init__(self, config):
+        # Configuración existente...
+        self.create_searchable_pdf = config.get("create_searchable_pdf", True)
+        self.use_ocr = config.get("use_ocr", True)  # 🆕 Nueva opción
+        
+        # Solo inicializar EasyOCR si está habilitado
+        if self.use_ocr and self.create_searchable_pdf:
+            self._initialize_easyocr()
+        else:
+            output_manager.info("ℹ️ OCR deshabilitado - PDFs se crearán sin texto buscable")
+            self.ocr_reader = None
+```
+
+#### **Lógica de Procesamiento**
+
+```python
+def _create_pdf_with_easyocr(self, input_path: Path, output_path: Path) -> bool:
+    # ... código de creación de PDF ...
+    
+    # Realizar OCR solo si está habilitado
+    if self.use_ocr and self.create_searchable_pdf and self.ocr_reader:
+        self._add_text_layer_to_pdf(canvas_obj, pil_img, scale, x, y)
+    elif not self.use_ocr:
+        output_manager.info(f"ℹ️ OCR deshabilitado para {input_path.name} - PDF sin texto buscable")
+```
+
+#### **Configuración en YAML**
+
+```yaml
+# Para PDFs individuales
+formats:
+  PDF:
+    use_ocr: true                    # Habilitar OCR (por defecto)
+    create_searchable_pdf: true      # Crear PDF buscable
+
+# Para PDFs consolidados
+postconverters:
+  consolidated_pdf:
+    use_ocr: true                    # Habilitar OCR en consolidación
+```
+
+#### **Ventajas del Control de OCR**
+
+- **Rendimiento**: `use_ocr: false` elimina la carga de EasyOCR
+- **Memoria**: Reduce uso de RAM al no cargar modelos de OCR
+- **Velocidad**: Procesamiento más rápido para imágenes sin texto
+- **Flexibilidad**: Control granular por conversor y postconversor
 
 ### 🆕 Sistema de Compresión de PDF
 
@@ -460,6 +644,8 @@ postconverters:
 
 ### Crear un Nuevo Conversor
 
+#### Método 1: Usando Factory Pattern (Recomendado)
+
 1. **Heredar de BaseConverter**:
 ```python
 from .base import BaseConverter
@@ -479,6 +665,28 @@ class MiConversor(BaseConverter):
         return format_subdir / f"{input_file.stem}.mi_formato"
 ```
 
+2. **Registrar en el Factory**:
+```python
+from src.converters.factory import ConverterFactory
+
+# Registrar nuevo conversor
+ConverterFactory.register_converter("mi_formato", MiConversor)
+```
+
+3. **Agregar configuración**:
+```yaml
+# En config.yaml
+formats:
+  mi_formato:
+    enabled: true
+    parametro1: "valor1"
+    parametro2: "valor2"
+```
+
+#### Método 2: Registro Manual (Método Legacy)
+
+1. **Heredar de BaseConverter** (igual que arriba)
+
 2. **Registrar en el conversor principal**:
 ```python
 # En converter.py
@@ -493,14 +701,156 @@ def _initialize_converters(self):
     return converters
 ```
 
-3. **Agregar configuración**:
-```yaml
-# En config.yaml
-formats:
-  mi_formato:
-    enabled: true
-    parametro1: "valor1"
-    parametro2: "valor2"
+### Crear una Nueva Estrategia de Compresión
+
+1. **Implementar CompressionStrategy**:
+```python
+from src.converters.compression_strategies import CompressionStrategy
+
+class MiEstrategiaCompresion(CompressionStrategy):
+    def compress(self, input_path: Path, output_path: Path, config: Dict[str, Any]) -> bool:
+        # Implementar lógica de compresión
+        pass
+    
+    def get_name(self) -> str:
+        return "mi_estrategia"
+```
+
+2. **Registrar en el Factory**:
+```python
+from src.converters.compression_strategies import CompressionStrategyFactory
+
+# Registrar nueva estrategia
+CompressionStrategyFactory._strategies['mi_estrategia'] = MiEstrategiaCompresion
+```
+
+### Crear un Nuevo Observador
+
+1. **Implementar Observer**:
+```python
+from src.observers.event_system import Observer, Event
+
+class MiObservador(Observer):
+    def update(self, event: Event) -> None:
+        # Procesar evento
+        if event.event_type == EventType.CONVERSION_STARTED:
+            # Lógica específica
+            pass
+```
+
+2. **Adjuntar al EventManager**:
+```python
+from src.observers.event_system import event_manager
+
+# Adjuntar observador
+event_manager.attach(MiObservador())
+```
+
+### Crear un Nuevo Comando
+
+1. **Implementar Command**:
+```python
+from src.commands.command_pattern import Command
+
+class MiComando(Command):
+    def execute(self) -> bool:
+        # Implementar lógica del comando
+        pass
+    
+    def undo(self) -> bool:
+        # Implementar lógica de deshacer
+        pass
+    
+    def get_description(self) -> str:
+        return "Descripción del comando"
+```
+
+2. **Usar con CommandInvoker**:
+```python
+from src.commands.command_pattern import CommandInvoker
+
+invoker = CommandInvoker()
+comando = MiComando()
+invoker.execute_command(comando)
+```
+
+## 🎯 Mejores Prácticas con Patrones
+
+### Configuración Dinámica
+
+Usar el Builder Pattern para crear configuraciones específicas:
+
+```python
+from src.config_builder import ProductionConfigBuilder, DevelopmentConfigBuilder
+
+# Configuración para producción
+prod_config = ProductionConfigBuilder().build_production_config()
+
+# Configuración para desarrollo
+dev_config = DevelopmentConfigBuilder().build_development_config()
+
+# Guardar configuración
+prod_config.save_to_file("config_production.yaml")
+```
+
+### Manejo de Eventos
+
+Implementar observadores para monitoreo y logging:
+
+```python
+from src.observers.event_system import event_manager, LoggingObserver, MetricsObserver
+
+# Configurar observadores
+event_manager.attach(LoggingObserver("conversion.log"))
+event_manager.attach(MetricsObserver())
+
+# Emitir eventos durante la conversión
+event_manager.emit(EventType.CONVERSION_STARTED, {
+    "input_dir": str(input_dir),
+    "output_dir": str(output_dir),
+    "total_files": len(files)
+})
+```
+
+### Compresión Robusta
+
+Usar Strategy Pattern para fallback automático:
+
+```python
+from src.converters.compression_strategies import CompressionContext, CompressionStrategyFactory
+
+# Crear contexto con estrategia principal
+context = CompressionContext(CompressionStrategyFactory.create_strategy("pikepdf"))
+
+# Intentar compresión con fallback
+success = context.compress(input_path, output_path, config)
+if not success:
+    # Fallback a Ghostscript
+    context.set_strategy(CompressionStrategyFactory.create_strategy("ghostscript"))
+    success = context.compress(input_path, output_path, config)
+```
+
+### Operaciones Reversibles
+
+Usar Command Pattern para operaciones críticas:
+
+```python
+from src.commands.command_pattern import CommandInvoker, MacroCommand
+
+# Crear macro de operaciones
+commands = [
+    CreateDirectoryCommand(output_dir),
+    ConvertFileCommand(converter, input_file, output_file, "PDF"),
+    CreateDirectoryCommand(met_dir)
+]
+
+macro = MacroCommand(commands, "Conversión completa")
+invoker = CommandInvoker()
+invoker.execute_command(macro)
+
+# Si algo falla, deshacer todo
+if not macro.success:
+    invoker.undo_last_command()
 ```
 
 ### Crear un Nuevo Postconversor
@@ -531,6 +881,85 @@ def _initialize_postconverters(self):
     
     return postconverters
 ```
+
+## 🔄 Migración y Compatibilidad
+
+### Migración a Patrones de Diseño
+
+El sistema mantiene compatibilidad hacia atrás mientras introduce los nuevos patrones:
+
+#### Migración Gradual de Conversores
+
+```python
+# Método Legacy (sigue funcionando)
+def _initialize_converters(self):
+    converters = {}
+    if self.config_manager.is_format_enabled("JPGHIGH"):
+        converters["JPGHIGH"] = JPGResolutionConverter(config)
+    return converters
+
+# Método Nuevo (recomendado)
+def _initialize_converters(self):
+    return ConverterFactory.create_converters_from_config(self.config_manager)
+```
+
+#### Migración de Configuración
+
+```python
+# Configuración Legacy (YAML estático)
+config = ConfigManager("config.yaml")
+
+# Configuración Dinámica (recomendado)
+config = ProductionConfigBuilder().build_production_config()
+```
+
+#### Migración de Compresión
+
+```python
+# Compresión Legacy
+compressor = PDFCompressor(config)
+success = compressor.compress(input_path, output_path)
+
+# Compresión con Strategy (recomendado)
+context = CompressionContext(PikepdfCompressionStrategy())
+success = context.compress(input_path, output_path, config)
+```
+
+### Compatibilidad de Versiones
+
+| Versión | Patrones Disponibles | Compatibilidad |
+|---------|---------------------|----------------|
+| **v1.x** | Sin patrones | ✅ Total |
+| **v2.x** | Factory, Strategy | ✅ Total |
+| **v3.x** | + Observer, Builder | ✅ Total |
+| **v4.x** | + Command | ✅ Total |
+
+### Guía de Migración por Componente
+
+#### 1. Conversores
+- **Antes**: Registro manual en `converter.py`
+- **Después**: Registro automático con `ConverterFactory`
+- **Beneficio**: Extensibilidad sin modificar código principal
+
+#### 2. Compresión
+- **Antes**: Una sola estrategia de compresión
+- **Después**: Múltiples estrategias con fallback
+- **Beneficio**: Mayor robustez y flexibilidad
+
+#### 3. Configuración
+- **Antes**: Archivos YAML estáticos
+- **Después**: Construcción dinámica con validación
+- **Beneficio**: Configuraciones especializadas y validadas
+
+#### 4. Logging
+- **Antes**: Logging directo con `output_manager`
+- **Después**: Sistema de eventos con observadores
+- **Beneficio**: Logging estructurado y extensible
+
+#### 5. Operaciones
+- **Antes**: Operaciones directas sin reversibilidad
+- **Después**: Comandos encapsulados con deshacer/rehacer
+- **Beneficio**: Operaciones seguras y auditables
 
 ## 🧪 Testing
 
@@ -624,6 +1053,116 @@ class TestMiConversor(unittest.TestCase):
    **Solución**: Instalar dependencias
    ```bash
    pip install pypdf pikepdf
+   ```
+
+### Troubleshooting de Patrones de Diseño
+
+#### Factory Pattern
+
+**Error**: `Conversor 'FORMATO' no registrado en el factory`
+```python
+# Solución: Registrar el conversor
+from src.converters.factory import ConverterFactory
+ConverterFactory.register_converter("FORMATO", MiConversor)
+```
+
+**Error**: `El conversor FORMATO debe heredar de BaseConverter`
+```python
+# Solución: Asegurar herencia correcta
+class MiConversor(BaseConverter):  # ✅ Correcto
+    pass
+
+class MiConversor:  # ❌ Incorrecto
+    pass
+```
+
+#### Strategy Pattern
+
+**Error**: `Estrategia 'estrategia' no disponible`
+```python
+# Solución: Verificar estrategias disponibles
+from src.converters.compression_strategies import CompressionStrategyFactory
+print(CompressionStrategyFactory.get_available_strategies())
+```
+
+**Error**: `Error en compresión con estrategia`
+```python
+# Solución: Implementar fallback
+context = CompressionContext(PikepdfCompressionStrategy())
+if not context.compress(input_path, output_path, config):
+    context.set_strategy(GhostscriptCompressionStrategy())
+    context.compress(input_path, output_path, config)
+```
+
+#### Observer Pattern
+
+**Error**: `Error notificando a observador`
+```python
+# Solución: Manejar excepciones en observadores
+class MiObservador(Observer):
+    def update(self, event: Event) -> None:
+        try:
+            # Lógica del observador
+            pass
+        except Exception as e:
+            output_manager.error(f"Error en observador: {str(e)}")
+```
+
+**Error**: `Observador no adjuntado`
+```python
+# Solución: Adjuntar observador antes de emitir eventos
+from src.observers.event_system import event_manager
+event_manager.attach(MiObservador())
+event_manager.emit(EventType.CONVERSION_STARTED, data)
+```
+
+#### Builder Pattern
+
+**Error**: `Configuración inválida`
+```python
+# Solución: Validar configuración paso a paso
+builder = ConfigBuilder()
+config = (builder
+          .add_format("JPGHIGH")
+          .set_format_quality(95)  # Asegurar valor válido (1-100)
+          .validate()  # Validar antes de construir
+          .build())
+```
+
+**Error**: `Error guardando configuración`
+```python
+# Solución: Verificar permisos y ruta
+try:
+    config.save_to_file("config.yaml")
+except PermissionError:
+    output_manager.error("Sin permisos para escribir archivo")
+except Exception as e:
+    output_manager.error(f"Error guardando: {str(e)}")
+```
+
+#### Command Pattern
+
+**Error**: `No hay comandos para deshacer`
+```python
+# Solución: Verificar historial antes de deshacer
+invoker = CommandInvoker()
+if invoker.get_history():
+    invoker.undo_last_command()
+else:
+    output_manager.warning("No hay comandos para deshacer")
+```
+
+**Error**: `Error deshaciendo comando`
+```python
+# Solución: Implementar manejo de errores en comandos
+class MiComando(Command):
+    def undo(self) -> bool:
+        try:
+            # Lógica de deshacer
+            return True
+        except Exception as e:
+            output_manager.error(f"Error deshaciendo: {str(e)}")
+            return False
    ```
 
 ### Logs y Debug

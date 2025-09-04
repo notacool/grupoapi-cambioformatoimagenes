@@ -37,9 +37,13 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
         self.enabled = config.get("enabled", True)
         self.max_size_mb = config.get("max_size_mb", 10)
         self.output_folder = config.get("output_folder", "PDF")
+        self.use_ocr = config.get("use_ocr", True)  # Nueva opción para controlar OCR
 
         # Inicializar el conversor PDF con OCR
-        self.pdf_converter = PDFEasyOCRConverter(config)
+        # Pasar la configuración de OCR al conversor
+        pdf_config = config.copy()
+        pdf_config["use_ocr"] = self.use_ocr
+        self.pdf_converter = PDFEasyOCRConverter(pdf_config)
 
         # Configuración de compresión para PDFs consolidados
         compression_config = config.get("compression", {})
@@ -84,8 +88,9 @@ class ConsolidatedPDFPostconverter(BasePostConverter):
             # Ordenar archivos alfabéticamente
             tiff_files.sort(key=lambda x: x.name.lower())
 
+            ocr_status = "con OCR" if self.use_ocr else "sin OCR"
             output_manager.info(
-                f"🔄 Consolidando {len(tiff_files)} archivos TIFF de {subfolder_name}"
+                f"🔄 Consolidando {len(tiff_files)} archivos TIFF de {subfolder_name} ({ocr_status})"
             )
 
             # Crear directorio de salida

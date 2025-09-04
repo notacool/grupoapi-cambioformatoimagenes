@@ -21,6 +21,7 @@ El **Conversor TIFF v2.0** es un sistema avanzado de conversión de archivos TIF
 - **JPG 200 DPI**: Resolución media optimizada para web
 - **PDF con EasyOCR**: Texto buscable y seleccionable con reconocimiento óptico
 - **🆕 PDF con Compresión Inteligente**: Reducción automática de tamaño sin pérdida de calidad
+- **🆕 Control de OCR**: Opción para deshabilitar OCR y crear PDFs más rápidos (solo imágenes)
 - **Metadatos MET**: Archivos XML con estándar MET de la Library of Congress
 
 ### 📊 **Postconversores Avanzados por Subcarpeta**
@@ -99,6 +100,7 @@ formats:
     ocr_language: ["es", "en"]      # Idiomas para OCR
     ocr_confidence: 0.2             # Confianza mínima para OCR
     create_searchable_pdf: true      # Crear PDF con texto buscable
+    use_ocr: true                    # 🆕 HABILITAR/DESHABILITAR OCR (true/false)
     use_gpu: true                    # Usar GPU si está disponible
     
     # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF
@@ -139,7 +141,7 @@ postconverters:
     enabled: true                    # Habilitar consolidación de PDFs
     max_size_mb: 50                 # 📏 Tamaño máximo por PDF en MB (aumentado para evitar división excesiva)
     output_folder: "PDF"             # Carpeta de salida (misma que PDF individual)
-    use_ocr: true                   # Aplicar OCR a las imágenes
+    use_ocr: true                   # 🆕 HABILITAR/DESHABILITAR OCR en PDF consolidado (true/false)
     sort_by_name: true              # Ordenar archivos por nombre alfabético
     
     # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF CONSOLIDADO
@@ -322,6 +324,38 @@ postconverters:
     use_ocr: true                   # 🔍 Aplicar OCR
     sort_by_name: true              # 📋 Ordenar alfabéticamente
 ```
+
+### 🆕 **Control de OCR - Nueva Funcionalidad**
+
+El sistema ahora permite **deshabilitar el OCR** para crear PDFs más rápidos:
+
+#### **Opciones de OCR:**
+- **`use_ocr: true`** (por defecto): PDFs con texto buscable usando EasyOCR
+- **`use_ocr: false`**: PDFs solo con imágenes (sin OCR, más rápido)
+
+#### **Configuración para PDFs sin OCR:**
+```yaml
+# Para PDFs individuales
+formats:
+  PDF:
+    use_ocr: false                   # 🚀 Deshabilitar OCR (más rápido)
+    create_searchable_pdf: false     # PDF sin texto buscable
+
+# Para PDFs consolidados
+postconverters:
+  consolidated_pdf:
+    use_ocr: false                   # 🚀 Deshabilitar OCR (más rápido)
+```
+
+#### **Ventajas de deshabilitar OCR:**
+- ⚡ **Procesamiento más rápido**: No se ejecuta reconocimiento óptico
+- 💾 **Menor uso de memoria**: No se carga EasyOCR
+- 📦 **PDFs más pequeños**: Sin capa de texto adicional
+- 🔧 **Menos dependencias**: No requiere EasyOCR instalado
+
+#### **Cuándo usar cada opción:**
+- **Con OCR (`use_ocr: true`)**: Documentos que necesitan ser buscables
+- **Sin OCR (`use_ocr: false`)**: Imágenes, fotografías, o cuando la velocidad es prioritaria
 
 #### **Orden de Ejecución:**
 1. **Conversores individuales** (JPG, PDF, METS)
