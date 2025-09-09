@@ -71,7 +71,7 @@ class METFormatPostConverter(BasePostConverter):
             failed_formats = [
                 fmt
                 for fmt, success in results.items()
-                if not success and fmt != "original_tiff_mets"
+                if not success and fmt != "original_tiff_mets" and fmt in results
             ]
 
             # Verificar si se generó el METS del TIFF original
@@ -252,7 +252,11 @@ class METFormatPostConverter(BasePostConverter):
                     )
                     results[format_name] = success
                 else:
-                    results[format_name] = False
+                    # No marcar como fallido si simplemente no hay archivos para este formato
+                    # Solo incluir en resultados si realmente se intentó procesar
+                    if format_name in ["JPGHIGH", "JPGLOW"]:  # Formatos que siempre deberían existir
+                        results[format_name] = False
+                    # PDF se omite si no hay archivos (formato deshabilitado)
 
             # Generar archivo METS del TIFF original para esta subcarpeta
             original_tiff_success = self._create_original_tiff_mets_file(
