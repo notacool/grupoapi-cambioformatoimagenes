@@ -21,14 +21,14 @@ formats:
   
   # Conversor PDF con EasyOCR (alternativa local)
   PDF:
-    enabled: true                     # ✅ HABILITAR EasyOCR
+    enabled: false                      # ✅ HABILITAR EasyOCR
     resolution: 300                  # Resolución en DPI
     page_size: "A4"                 # Tamaño de página
     fit_to_page: true                # Ajustar imagen a la página
     ocr_language: ["es", "en"]      # Lista de idiomas para OCR
     ocr_confidence: 0.2             # Confianza mínima para OCR (0.0-1.0)
     create_searchable_pdf: true      # Crear PDF con texto buscable
-    use_ocr: true                    # 🆕 HABILITAR/DESHABILITAR OCR (true/false)
+    use_ocr: true                     # 🆕 HABILITAR/DESHABILITAR OCR (true/false)
     use_gpu: true                    # Usar GPU si está disponible
     
     # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF
@@ -44,7 +44,7 @@ formats:
 processing:
   max_workers: 1                     # Número máximo de workers paralelos
   batch_size: 2                     # Tamaño del lote de procesamiento
-  overwrite_existing: false          # Sobrescribir archivos existentes
+  overwrite_existing: true           # Sobrescribir archivos existentes
 
 # Configuración de salida
 output:
