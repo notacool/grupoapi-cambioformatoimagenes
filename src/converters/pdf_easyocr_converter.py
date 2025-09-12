@@ -86,52 +86,85 @@ class PDFEasyOCRConverter(BaseConverter):
             True si la conversión fue exitosa
         """
         try:
+            # LOG DETALLADO: Inicio de conversión
+            output_manager.info(f"🔄 [PDF] INICIANDO CONVERSIÓN")
+            output_manager.info(f"📁 [PDF] Ruta entrada: {input_path.absolute()}")
+            output_manager.info(f"📁 [PDF] Ruta salida: {output_path.absolute()}")
+            output_manager.info(f"📊 [PDF] Tamaño entrada: {input_path.stat().st_size / (1024*1024):.2f} MB")
+            output_manager.info(f"🔧 [PDF] OCR habilitado: {self.use_ocr}")
+            output_manager.info(f"🔧 [PDF] PDF buscable: {self.create_searchable_pdf}")
+            output_manager.info(f"🔧 [PDF] EasyOCR disponible: {self.ocr_reader is not None}")
+            
             # Validar entrada
+            output_manager.info(f"🔍 [PDF] Validando archivo de entrada...")
             if not self.validate_input(input_path):
                 output_manager.error(
-                    f"Error: Archivo de entrada inválido: {input_path}"
+                    f"❌ [PDF] Error: Archivo de entrada inválido: {input_path.absolute()}"
                 )
                 return False
+            output_manager.info(f"✅ [PDF] Archivo de entrada válido")
 
             # Crear directorio de salida
+            output_manager.info(f"📂 [PDF] Creando directorio de salida: {output_path.parent.absolute()}")
             if not self.create_output_directory(output_path):
                 output_manager.error(
-                    f"Error: No se pudo crear el directorio de salida: {output_path.parent}"
+                    f"❌ [PDF] Error: No se pudo crear el directorio de salida: {output_path.parent.absolute()}"
                 )
                 return False
+            output_manager.info(f"✅ [PDF] Directorio de salida creado")
 
             # Verificar que EasyOCR esté disponible solo si OCR está habilitado
             if self.use_ocr and self.create_searchable_pdf and not self.ocr_reader:
-                output_manager.error("❌ EasyOCR no está disponible pero OCR está habilitado")
+                output_manager.error("❌ [PDF] EasyOCR no está disponible pero OCR está habilitado")
                 return False
 
             # Crear PDF con OCR
+            output_manager.info(f"🔄 [PDF] Iniciando creación de PDF con OCR...")
             success = self._create_pdf_with_easyocr(input_path, output_path)
+            
             if success:
+                output_manager.info(f"✅ [PDF] PDF creado exitosamente")
+                
                 # Aplicar compresión si está habilitada
                 if self.pdf_compressor.config['enabled']:
+                    output_manager.info(f"🗜️ [PDF] Iniciando compresión de PDF...")
                     # Crear archivo temporal para la compresión
                     import tempfile
                     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
                         temp_pdf_path = Path(temp_file.name)
                     
+                    output_manager.info(f"📁 [PDF] Archivo temporal: {temp_pdf_path.absolute()}")
+                    
                     # Comprimir el PDF
                     if self.pdf_compressor.compress(output_path, temp_pdf_path):
+                        output_manager.info(f"✅ [PDF] Compresión exitosa")
                         # Reemplazar el archivo original con el comprimido
                         import shutil
                         shutil.move(temp_pdf_path, output_path)
+                        output_manager.info(f"✅ [PDF] Archivo comprimido reemplazado")
                     else:
+                        output_manager.warning(f"⚠️ [PDF] Compresión falló, manteniendo original")
                         # Si la compresión falla, mantener el original
                         if temp_pdf_path.exists():
                             temp_pdf_path.unlink()
+                else:
+                    output_manager.info(f"ℹ️ [PDF] Compresión deshabilitada")
                 
+                # Log final de éxito
+                final_size = output_path.stat().st_size / (1024*1024)
                 output_manager.success(
-                    f"✅ Convertido: {input_path.name} -> {output_path.name}"
+                    f"✅ [PDF] CONVERSIÓN COMPLETADA: {input_path.name} -> {output_path.name} ({final_size:.2f} MB)"
                 )
                 return success
+            else:
+                output_manager.error(f"❌ [PDF] Error en la creación del PDF")
+                return False
 
         except Exception as e:
-            output_manager.error(f"❌ Error convirtiendo {input_path.name}: {str(e)}")
+            output_manager.error(f"❌ [PDF] ERROR CRÍTICO convirtiendo {input_path.name}: {str(e)}")
+            output_manager.error(f"❌ [PDF] Tipo de error: {type(e).__name__}")
+            import traceback
+            output_manager.error(f"❌ [PDF] Traceback: {traceback.format_exc()}")
             return False
 
     def _create_pdf_with_easyocr(self, input_path: Path, output_path: Path) -> bool:
@@ -146,14 +179,35 @@ class PDFEasyOCRConverter(BaseConverter):
             True si se creó correctamente
         """
         try:
+            output_manager.info(f"🔄 [PDF-OCR] Abriendo imagen TIFF...")
             # Abrir imagen TIFF con PIL
             with Image.open(input_path) as pil_img:
+                output_manager.info(f"✅ [PDF-OCR] Imagen abierta: {pil_img.size[0]}x{pil_img.size[1]} px, modo: {pil_img.mode}")
+                
                 # Convertir a RGB si es necesario
                 if pil_img.mode not in ["RGB", "L"]:
+                    output_manager.info(f"🔄 [PDF-OCR] Convirtiendo de {pil_img.mode} a RGB...")
                     pil_img = pil_img.convert("RGB")
+                    output_manager.info(f"✅ [PDF-OCR] Conversión completada")
 
                 # Obtener dimensiones
                 img_width, img_height = pil_img.size
+                output_manager.info(f"📊 [PDF-OCR] Dimensiones originales: {img_width}x{img_height} píxeles")
+                
+                # Reducir tamaño de imagen para OCR si es muy grande
+                max_ocr_size = 2048  # Máximo 2048 píxeles para OCR
+                if img_width > max_ocr_size or img_height > max_ocr_size:
+                    output_manager.info(f"🔄 [PDF-OCR] Imagen muy grande para OCR, redimensionando...")
+                    # Calcular factor de escala manteniendo proporción
+                    scale_factor = min(max_ocr_size / img_width, max_ocr_size / img_height)
+                    new_width = int(img_width * scale_factor)
+                    new_height = int(img_height * scale_factor)
+                    
+                    pil_img = pil_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    output_manager.info(f"✅ [PDF-OCR] Imagen redimensionada: {new_width}x{new_height} píxeles")
+                    
+                    # Actualizar dimensiones
+                    img_width, img_height = pil_img.size
 
                 # Crear PDF con tamaño exacto de la imagen (sin bordes)
                 # Convertir píxeles a puntos (1 punto = 1/72 pulgada)
@@ -164,11 +218,17 @@ class PDFEasyOCRConverter(BaseConverter):
 
                 page_width = img_width * scale_factor
                 page_height = img_height * scale_factor
+                
+                output_manager.info(f"📏 [PDF-OCR] DPI objetivo: {dpi}")
+                output_manager.info(f"📏 [PDF-OCR] Factor de escala: {scale_factor:.4f}")
+                output_manager.info(f"📏 [PDF-OCR] Tamaño página PDF: {page_width:.2f}x{page_height:.2f} puntos")
 
                 # Crear PDF con tamaño personalizado
+                output_manager.info(f"🔄 [PDF-OCR] Creando canvas PDF...")
                 canvas_obj = reportlab_canvas.Canvas(
                     str(output_path), pagesize=(page_width, page_height)
                 )
+                output_manager.info(f"✅ [PDF-OCR] Canvas PDF creado")
 
                 # Sin escalado, usar tamaño original
                 scale = 1.0
@@ -179,6 +239,7 @@ class PDFEasyOCRConverter(BaseConverter):
                 import os
                 import tempfile
 
+                output_manager.info(f"🔄 [PDF-OCR] Creando archivo temporal JPEG...")
                 with tempfile.NamedTemporaryFile(
                     suffix=".jpg", delete=False
                 ) as temp_file:

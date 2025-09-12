@@ -21,7 +21,7 @@ formats:
   
   # Conversor PDF con EasyOCR (alternativa local)
   PDF:
-    enabled: false                      # ✅ HABILITAR EasyOCR
+    enabled: true                      # ✅ HABILITAR EasyOCR
     resolution: 300                  # Resolución en DPI
     page_size: "A4"                 # Tamaño de página
     fit_to_page: true                # Ajustar imagen a la página
@@ -33,9 +33,9 @@ formats:
     
     # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF
     compression:
-      enabled: true                   # Habilitar compresión de PDF
+      enabled: false                  # Deshabilitar compresión de PDF (proyecto actual)
       compression_level: "ebook"      # Nivel: screen, ebook, printer, prepress
-      target_dpi: 200                 # DPI objetivo para imágenes (reducir de 400)
+      target_dpi: 100                 # DPI objetivo para imágenes (muy reducido para evitar colgadas)
       image_quality: 85               # Calidad JPEG (0-100, reducir de 95)
       remove_metadata: true           # Eliminar metadatos innecesarios
       fallback_on_error: true         # Usar PDF original si falla compresión
@@ -43,8 +43,8 @@ formats:
 # Configuración de procesamiento
 processing:
   max_workers: 1                     # Número máximo de workers paralelos
-  batch_size: 2                     # Tamaño del lote de procesamiento
-  overwrite_existing: true           # Sobrescribir archivos existentes
+  batch_size: 1                     # Tamaño del lote de procesamiento (reducido para evitar colgadas)
+  overwrite_existing: false           # Sobrescribir archivos existentes
 
 # Configuración de salida
 output:
@@ -66,15 +66,15 @@ METS:
 postconverters:
   # Postconversor para consolidar PDFs
   consolidated_pdf:
-    enabled: true                    # Habilitar consolidación de PDFs
-    max_size_mb: 5000               # 📏 Aumentar a 5GB para archivos grandes de producción
+    enabled: false                   # ❌ DESHABILITAR PDF consolidado (muy lento)
+    max_size_mb: 3000                 # 📏 Aumentar a 3GB para archivos grandes de producción
     output_folder: "PDF"             # Carpeta de salida (misma que PDF individual)
     use_ocr: true                   # 🆕 HABILITAR/DESHABILITAR OCR en PDF consolidado (true/false)
     sort_by_name: true              # Ordenar archivos por nombre alfabético
     
     # 🔧 CONFIGURACIÓN DE COMPRESIÓN DE PDF CONSOLIDADO
     compression:
-      enabled: true                   # Habilitar compresión de PDF consolidado
+      enabled: false                   # Habilitar compresión de PDF consolidado
       compression_level: "ebook"      # Nivel: screen, ebook, printer, prepress
       target_dpi: 200                 # DPI objetivo para imágenes
       image_quality: 85               # Calidad JPEG (0-100)

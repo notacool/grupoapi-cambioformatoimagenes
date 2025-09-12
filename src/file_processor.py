@@ -41,10 +41,22 @@ class FileProcessor:
         for item in self.input_dir.rglob("*"):
             if item.is_dir() and item.name.upper() == "TIFF":
                 # Obtener el nombre de la subcarpeta padre
-                subfolder_name = item.parent.name
+                # Para subcarpetas anidadas, usar la ruta relativa completa
+                relative_path = item.parent.relative_to(self.input_dir)
+                if str(relative_path) == ".":
+                    # Si está en el nivel raíz
+                    subfolder_name = item.parent.name
+                else:
+                    # Si está en subcarpetas anidadas, usar la ruta completa
+                    # CORRECCIÓN: Mantener la estructura jerárquica con separadores correctos
+                    subfolder_name = str(relative_path)
+                
                 tiff_folders[subfolder_name] = item
                 output_manager.info(
                     f"📁 Carpeta TIFF encontrada en: {subfolder_name}/TIFF/"
+                )
+                output_manager.info(
+                    f"📁 Ruta completa: {item.absolute()}"
                 )
 
         return tiff_folders
