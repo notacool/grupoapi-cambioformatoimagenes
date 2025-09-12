@@ -39,27 +39,33 @@ class FileProcessor:
 
         # Buscar recursivamente en todas las subcarpetas
         for item in self.input_dir.rglob("*"):
-            if item.is_dir() and item.name.upper() == "TIFF":
-                # Obtener el nombre de la subcarpeta padre
-                # Para subcarpetas anidadas, usar la ruta relativa completa
-                relative_path = item.parent.relative_to(self.input_dir)
-                if str(relative_path) == ".":
-                    # Si está en el nivel raíz
-                    subfolder_name = item.parent.name
-                else:
-                    # Si está en subcarpetas anidadas, usar la ruta completa
-                    # CORRECCIÓN: Mantener la estructura jerárquica con separadores correctos
-                    subfolder_name = str(relative_path)
-                
+            if self._is_tiff_folder(item):
+                subfolder_name = self._generate_subfolder_name(item)
                 tiff_folders[subfolder_name] = item
-                output_manager.info(
-                    f"📁 Carpeta TIFF encontrada en: {subfolder_name}/TIFF/"
-                )
-                output_manager.info(
-                    f"📁 Ruta completa: {item.absolute()}"
-                )
+                self._log_tiff_folder_found(subfolder_name, item)
 
         return tiff_folders
+
+    def _is_tiff_folder(self, item: Path) -> bool:
+        """Verifica si un item es una carpeta TIFF"""
+        return item.is_dir() and item.name.upper() == "TIFF"
+
+    def _generate_subfolder_name(self, tiff_folder: Path) -> str:
+        """Genera el nombre de la subcarpeta basado en la ruta relativa"""
+        relative_path = tiff_folder.parent.relative_to(self.input_dir)
+        
+        if str(relative_path) == ".":
+            # Si está en el nivel raíz
+            return tiff_folder.parent.name
+        else:
+            # Si está en subcarpetas anidadas, usar la ruta completa
+            # CORRECCIÓN: Mantener la estructura jerárquica con separadores correctos
+            return str(relative_path)
+
+    def _log_tiff_folder_found(self, subfolder_name: str, tiff_folder: Path) -> None:
+        """Registra el descubrimiento de una carpeta TIFF"""
+        output_manager.info(f"📁 Carpeta TIFF encontrada en: {subfolder_name}/TIFF/")
+        output_manager.info(f"📁 Ruta completa: {tiff_folder.absolute()}")
 
     def get_tiff_folders(self) -> Dict[str, Path]:
         """Retorna las carpetas TIFF encontradas (lazy loading)"""
