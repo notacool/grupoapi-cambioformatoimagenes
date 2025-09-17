@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mets xmlns:ns1="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+  <objid>MET_ORIGINAL_TIFF_20250828_115347</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>Grupo API</name>
+  </agent>
+  <metsHdr CREATEDATE="2025-08-28T11:53:47" LASTMODDATE="2025-08-28T11:53:47">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Sistema Automatizado</name>
+    </agent>
+  </metsHdr>
+  <fileSec>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_1_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_1.tiff" />
+        <fileInfo name="documento_valencia_1.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_1_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_1.tiff" />
+        <fileInfo name="documento_valencia_1.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_1_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_1.tiff" />
+        <fileInfo name="documento_valencia_1.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_2_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_2.tiff" />
+        <fileInfo name="documento_valencia_2.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_2_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_2.tiff" />
+        <fileInfo name="documento_valencia_2.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_2_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_2.tiff" />
+        <fileInfo name="documento_valencia_2.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_3_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_3.tiff" />
+        <fileInfo name="documento_valencia_3.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_3_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_3.tiff" />
+        <fileInfo name="documento_valencia_3.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_documento_valencia_3_ORIGINAL" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-28T11:34:56" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_subfolder_input\valencia\TIFF\documento_valencia_3.tiff" />
+        <fileInfo name="documento_valencia_3.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-28T11:34:56" modified="2025-08-22T12:36:28" accessed="2025-08-28T11:53:47" permissions="666" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" />
+      </file>
+    </fileGrp>
+  </fileSec>
+  <amdSec>
+    <premisMD ID="PREMIS_ORIGINAL_TIFF">
+      <mdWrap MDTYPE="PREMIS" OTHERMDTYPE="PREMIS">
+        <xmlData>
+          <premis xmlns="http://www.loc.gov/premis/v3" version="3.0">
+            <objects>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_1_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_1_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_1_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_2_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_2_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_2_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_3_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_3_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>documento_valencia_3_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                </objectIdentifier>
+                <objectCharacteristics>
+                  <size>48888</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                    </formatDesignation>
+                  </format>
+                  <creation>
+                    <dateCreated>2025-08-28T11:53:47</dateCreated>
+                  </creation>
+                </objectCharacteristics>
+              </object>
+            </objects>
+          </premis>
+        </xmlData>
+      </mdWrap>
+    </premisMD>
+  </amdSec>
+</mets>

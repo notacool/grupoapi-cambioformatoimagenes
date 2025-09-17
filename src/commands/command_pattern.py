@@ -74,8 +74,8 @@ class ConvertFileCommand(Command):
     def execute(self) -> bool:
         """Ejecuta la conversión."""
         try:
-            # Crear backup si el archivo de salida existe
-            if self.output_path.exists():
+            # Crear backup si el archivo de salida existe y tiene contenido (archivo real previo)
+            if self.output_path.exists() and self.output_path.stat().st_size > 0:
                 self.original_file_exists = True
                 self.backup_path = self.output_path.with_suffix(f"{self.output_path.suffix}.backup")
                 self.output_path.rename(self.backup_path)

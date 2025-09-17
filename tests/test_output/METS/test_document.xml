@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<met xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+  <objid>test_document</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>Sistema de Pruebas</name>
+    </agent>
+  <metsHdr CREATEDATE="2025-09-03T12:08:04" LASTMODDATE="2025-09-03T12:08:04">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Conversor TIFF v2.0</name>
+      </agent>
+    </metsHdr>
+  <fileSec>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_test_document" MIMETYPE="image/tiff" SIZE="48888" CREATED="2025-08-22T12:37:54" CHECKSUM="b0157fdde39e00470e270fad3e7772b6" CHECKSUMTYPE="MD5">
+        <FLocat xlink:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_input\test_document.tiff" />
+        <imageInfo width="800" height="600" mode="RGB" format="TIFF" dpi_x="1" dpi_y="1" compression="tiff_lzw" />
+        <fileInfo name="test_document.tiff" extension=".tiff" size_bytes="48888" size_mb="0.05" created="2025-08-22T12:37:54" modified="2025-08-22T12:36:28" accessed="2025-09-03T12:08:04" permissions="666" />
+        <processingInfo converter="METMetadataConverter" conversion_date="2025-09-03T12:08:04" metadata_standard="MET" version="1.0">
+          <configuration include_image_metadata="True" include_file_metadata="True" include_processing_info="True" />
+          </processingInfo>
+        </file>
+      </fileGrp>
+    </fileSec>
+  <amdSec>
+    <techMD ID="TECHMD_test_document">
+      <mdWrap MDTYPE="OTHER" OTHERMDTYPE="TECHNICAL">
+        <xmlData>
+          <technicalInfo format="TIFF" conversionDate="2025-09-03T12:08:04" converter="Conversor TIFF v2.0" />
+          </xmlData>
+        </mdWrap>
+      </techMD>
+    </amdSec>
+  </met>

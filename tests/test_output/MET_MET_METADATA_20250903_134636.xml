@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+  <objid>MET_MET_METADATA_20250903_134636</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>Sistema de Pruebas</name>
+    </agent>
+  <metsHdr CREATEDATE="2025-09-03T13:46:36" LASTMODDATE="2025-09-03T13:46:36">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Script de Prueba</name>
+      </agent>
+    </metsHdr>
+  <fileSec>
+    <fileGrp USE="MET_METADATA" ID="FILEGRP_MET_METADATA">
+      <file ID="FILE_documento2_met_metadata" MIMETYPE="application/xml" SIZE="8192">
+        <FLocat xlink:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_output\met_metadata\documento2_MET.xml" />
+        </file>
+      </fileGrp>
+    </fileSec>
+  <amdSec>
+    <premisMD ID="PREMIS_MET_METADATA">
+      <mdWrap MDTYPE="PREMIS" OTHERMDTYPE="PREMIS">
+        <xmlData>
+          <premis xmlns="http://www.loc.gov/premis/v3" version="3.0">
+            <objects>
+              <object xsi:type="representation">
+                <objectIdentifier>
+                  <objectIdentifierValue>documento2_met_metadata</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                  </objectIdentifier>
+                <objectCharacteristics>
+                  <size>8192</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>met_metadata</formatName>
+                      </formatDesignation>
+                    </format>
+                  <creation>
+                    <dateCreated>2025-09-03T13:46:36</dateCreated>
+                    </creation>
+                  </objectCharacteristics>
+                </object>
+              </objects>
+            </premis>
+          </xmlData>
+        </mdWrap>
+      </premisMD>
+    </amdSec>
+  </mets>
