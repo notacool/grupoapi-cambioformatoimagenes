@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <objid>MET_JPGHIGH_madraza_20250828_115315</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>Grupo API</name>
+  </agent>
+  <metsHdr CREATEDATE="2025-08-28T11:53:15.236134" LASTMODDATE="2025-08-28T11:53:15.236138">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Conversor TIFF v2.0</name>
+    </agent>
+  </metsHdr>
+  <fileSec>
+    <fileGrp USE="PRESERVATION">
+      <!-- Archivos del formato JPGHIGH para subcarpeta madraza -->
+    </fileGrp>
+  </fileSec>
+</mets>

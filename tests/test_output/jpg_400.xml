@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+  <objid>MET_JPG_400</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>Sistema de Pruebas</name>
+    </agent>
+  <metsHdr CREATEDATE="2025-09-03T13:46:36" LASTMODDATE="2025-09-03T13:46:36">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Script de Prueba</name>
+      </agent>
+    </metsHdr>
+  <fileSec>
+    <fileGrp USE="JPG_400" ID="FILEGRP_JPG_400">
+      <file ID="FILE_documento1_jpg_400" MIMETYPE="image/jpeg" SIZE="1024000">
+        <FLocat xlink:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_output\jpg_400\documento1_400.jpg" />
+        </file>
+      </fileGrp>
+    </fileSec>
+  <amdSec>
+    <premisMD ID="PREMIS_JPG_400">
+      <mdWrap MDTYPE="PREMIS" OTHERMDTYPE="PREMIS">
+        <xmlData>
+          <premis xmlns="http://www.loc.gov/premis/v3" version="3.0">
+            <objects>
+              <object xsi:type="representation">
+                <objectIdentifier>
+                  <objectIdentifierValue>documento1_jpg_400</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                  </objectIdentifier>
+                <objectCharacteristics>
+                  <size>1024000</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>jpg_400</formatName>
+                      </formatDesignation>
+                    </format>
+                  <creation>
+                    <dateCreated>2025-09-03T13:46:36</dateCreated>
+                    </creation>
+                  </objectCharacteristics>
+                </object>
+              </objects>
+            </premis>
+          </xmlData>
+        </mdWrap>
+      </premisMD>
+    </amdSec>
+  </mets>

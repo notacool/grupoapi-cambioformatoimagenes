@@ -73,7 +73,8 @@ class ConfigBuilder:
         Returns:
             Self para method chaining
         """
-        if self._current_format and 1 <= quality <= 100:
+        # Permitir setear cualquier valor y delegar la validación a validate()
+        if self._current_format:
             self.config['formats'][self._current_format]['quality'] = quality
         return self
     

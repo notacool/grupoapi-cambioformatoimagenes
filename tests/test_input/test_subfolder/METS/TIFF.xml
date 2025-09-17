@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mets xmlns:ns1="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+  <objid>MET_ORIGINAL_TIFF_20250901_084217</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>Grupo API</name>
+    </agent>
+  <metsHdr CREATEDATE="2025-09-01T08:42:17" LASTMODDATE="2025-09-01T08:42:17">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Sistema Automatizado</name>
+      </agent>
+    </metsHdr>
+  <fileSec>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_test_00_ORIGINAL" MIMETYPE="image/tiff" SIZE="0" CREATED="2025-08-28T13:13:58" CHECKSUM="d41d8cd98f00b204e9800998ecf8427e" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_input\test_subfolder\TIFF\test_00.tiff" />
+        <fileInfo name="test_00.tiff" extension=".tiff" size_bytes="0" size_mb="0.00" created="2025-08-28T13:13:58" modified="2025-08-28T13:19:17" accessed="2025-08-28T13:19:17" permissions="666" />
+        </file>
+      </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_test_00_ORIGINAL" MIMETYPE="image/tiff" SIZE="0" CREATED="2025-08-28T13:13:58" CHECKSUM="d41d8cd98f00b204e9800998ecf8427e" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_input\test_subfolder\TIFF\test_00.tiff" />
+        <fileInfo name="test_00.tiff" extension=".tiff" size_bytes="0" size_mb="0.00" created="2025-08-28T13:13:58" modified="2025-08-28T13:19:17" accessed="2025-08-28T13:19:17" permissions="666" />
+        </file>
+      </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_test_01_ORIGINAL" MIMETYPE="image/tiff" SIZE="0" CREATED="2025-08-28T13:13:58" CHECKSUM="d41d8cd98f00b204e9800998ecf8427e" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_input\test_subfolder\TIFF\test_01.tiff" />
+        <fileInfo name="test_01.tiff" extension=".tiff" size_bytes="0" size_mb="0.00" created="2025-08-28T13:13:58" modified="2025-08-28T13:19:17" accessed="2025-08-28T13:19:17" permissions="666" />
+        </file>
+      </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_test_01_ORIGINAL" MIMETYPE="image/tiff" SIZE="0" CREATED="2025-08-28T13:13:58" CHECKSUM="d41d8cd98f00b204e9800998ecf8427e" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_input\test_subfolder\TIFF\test_01.tiff" />
+        <fileInfo name="test_01.tiff" extension=".tiff" size_bytes="0" size_mb="0.00" created="2025-08-28T13:13:58" modified="2025-08-28T13:19:17" accessed="2025-08-28T13:19:17" permissions="666" />
+        </file>
+      </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_test_02_ORIGINAL" MIMETYPE="image/tiff" SIZE="0" CREATED="2025-08-28T13:13:58" CHECKSUM="d41d8cd98f00b204e9800998ecf8427e" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_input\test_subfolder\TIFF\test_02.tiff" />
+        <fileInfo name="test_02.tiff" extension=".tiff" size_bytes="0" size_mb="0.00" created="2025-08-28T13:13:58" modified="2025-08-28T13:19:17" accessed="2025-08-28T13:19:17" permissions="666" />
+        </file>
+      </fileGrp>
+    <fileGrp USE="PRESERVATION">
+      <file ID="FILE_test_02_ORIGINAL" MIMETYPE="image/tiff" SIZE="0" CREATED="2025-08-28T13:13:58" CHECKSUM="d41d8cd98f00b204e9800998ecf8427e" CHECKSUMTYPE="MD5">
+        <FLocat ns1:href="C:\Users\Román\Proyectos\Automatizacion Digitalizacion\test_input\test_subfolder\TIFF\test_02.tiff" />
+        <fileInfo name="test_02.tiff" extension=".tiff" size_bytes="0" size_mb="0.00" created="2025-08-28T13:13:58" modified="2025-08-28T13:19:17" accessed="2025-08-28T13:19:17" permissions="666" />
+        </file>
+      </fileGrp>
+    </fileSec>
+  <amdSec>
+    <premisMD ID="PREMIS_ORIGINAL_TIFF">
+      <mdWrap MDTYPE="PREMIS" OTHERMDTYPE="PREMIS">
+        <xmlData>
+          <premis xmlns="http://www.loc.gov/premis/v3" version="3.0">
+            <objects>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>test_00_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                  </objectIdentifier>
+                <objectCharacteristics>
+                  <size>0</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                      </formatDesignation>
+                    </format>
+                  <creation>
+                    <dateCreated>2025-09-01T08:42:17</dateCreated>
+                    </creation>
+                  </objectCharacteristics>
+                </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>test_00_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                  </objectIdentifier>
+                <objectCharacteristics>
+                  <size>0</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                      </formatDesignation>
+                    </format>
+                  <creation>
+                    <dateCreated>2025-09-01T08:42:17</dateCreated>
+                    </creation>
+                  </objectCharacteristics>
+                </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>test_01_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                  </objectIdentifier>
+                <objectCharacteristics>
+                  <size>0</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                      </formatDesignation>
+                    </format>
+                  <creation>
+                    <dateCreated>2025-09-01T08:42:17</dateCreated>
+                    </creation>
+                  </objectCharacteristics>
+                </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>test_01_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                  </objectIdentifier>
+                <objectCharacteristics>
+                  <size>0</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                      </formatDesignation>
+                    </format>
+                  <creation>
+                    <dateCreated>2025-09-01T08:42:17</dateCreated>
+                    </creation>
+                  </objectCharacteristics>
+                </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>test_02_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                  </objectIdentifier>
+                <objectCharacteristics>
+                  <size>0</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                      </formatDesignation>
+                    </format>
+                  <creation>
+                    <dateCreated>2025-09-01T08:42:17</dateCreated>
+                    </creation>
+                  </objectCharacteristics>
+                </object>
+              <object>
+                <objectIdentifier>
+                  <objectIdentifierValue>test_02_ORIGINAL</objectIdentifierValue>
+                  <objectIdentifierType>LOCAL</objectIdentifierType>
+                  </objectIdentifier>
+                <objectCharacteristics>
+                  <size>0</size>
+                  <format>
+                    <formatDesignation>
+                      <formatName>TIFF</formatName>
+                      </formatDesignation>
+                    </format>
+                  <creation>
+                    <dateCreated>2025-09-01T08:42:17</dateCreated>
+                    </creation>
+                  </objectCharacteristics>
+                </object>
+              </objects>
+            </premis>
+          </xmlData>
+        </mdWrap>
+      </premisMD>
+    </amdSec>
+  </mets>

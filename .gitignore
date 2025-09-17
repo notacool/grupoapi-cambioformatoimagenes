@@ -129,18 +129,24 @@ dmypy.json
 .pyre/
 
 # Archivos específicos del proyecto
-test_output/
-test_input/
-test_outputs/
+# Limitar ignores a la raíz y permitir fixtures bajo tests/
+/test_output/
+/test_input/
+/test_outputs/
 *.temp.pdf
-*.tiff
-*.jpg
-*.png
-*.pdf
+# No ignorar fixtures dentro de tests/
+!/tests/**/test_output/
+!/tests/**/test_input/
+!/tests/**/test_outputs/
+!/tests/**/*.tiff
+!/tests/**/*.jpg
+!/tests/**/*.png
+!/tests/**/*.pdf
 
 # Archivos de configuración de prueba
-test_*.py
-create_test_*.py
+# Ignorar solo scripts de test sueltos en la raíz (los reales están en tests/)
+/test_*.py
+/create_test_*.py
 
 # Archivos temporales de EasyOCR
 .EasyOCR/
@@ -155,7 +161,9 @@ logs/
 *.log
 
 # Archivos de metadatos METS generados
+# No ignorar XML de fixtures bajo tests/
 *.xml
+!/tests/**/*.xml
 
 # Archivos temporales del sistema
 temp/

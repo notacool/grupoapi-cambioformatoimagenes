@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+  <objid>MET_ORIGINAL_TIFF_20250828_114833</objid>
+  <agent ROLE="CREATOR" TYPE="ORGANIZATION">
+    <name>Grupo API</name>
+  </agent>
+  <metsHdr CREATEDATE="2025-08-28T11:48:33" LASTMODDATE="2025-08-28T11:48:33">
+    <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+      <name>Sistema Automatizado</name>
+    </agent>
+  </metsHdr>
+  <fileSec />
+  <amdSec>
+    <premisMD ID="PREMIS_ORIGINAL_TIFF">
+      <mdWrap MDTYPE="PREMIS" OTHERMDTYPE="PREMIS">
+        <xmlData>
+          <premis xmlns="http://www.loc.gov/premis/v3" version="3.0">
+            <objects />
+          </premis>
+        </xmlData>
+      </mdWrap>
+    </premisMD>
+  </amdSec>
+</mets>

@@ -211,7 +211,12 @@ class CompressionContext:
         Returns:
             True si la compresión fue exitosa
         """
-        return self._strategy.compress(input_path, output_path, config)
+        try:
+            return self._strategy.compress(input_path, output_path, config)
+        except Exception as exc:
+            # El contexto debe manejar excepciones de la estrategia y retornar False
+            output_manager.error(f"❌ Excepción en estrategia de compresión '{self._strategy.get_name()}': {exc}")
+            return False
     
     def get_strategy_name(self) -> str:
         """
