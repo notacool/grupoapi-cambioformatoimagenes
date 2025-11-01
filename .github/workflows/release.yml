@@ -53,7 +53,7 @@ jobs:
         pip freeze > requirements-lock.txt
 
     - name: Subir artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: release-package
         path: |
