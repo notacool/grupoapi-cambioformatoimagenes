@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout código
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Configurar Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout código
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Configurar Python
       uses: actions/setup-python@v5
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout código
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Configurar Python
       uses: actions/setup-python@v5
